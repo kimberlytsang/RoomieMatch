@@ -1,0 +1,15 @@
+# Local PostgreSQL for development. The app itself runs with `python manage.py runserver`.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: roomiematch
+      POSTGRES_PASSWORD: roomiematch
+      POSTGRES_DB: roomiematch
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

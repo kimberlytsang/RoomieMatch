@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Local config and secrets
+.env
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Django
+staticfiles/
+db.sqlite3
