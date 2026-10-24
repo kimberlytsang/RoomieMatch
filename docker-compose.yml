@@ -1,3 +1,4 @@
+# OPTIONAL: only needed if you run PostgreSQL in Docker instead of installing it. Start with: docker compose up -d db
 # Local PostgreSQL for development. The app itself runs with `python manage.py runserver`.
 services:
   db:

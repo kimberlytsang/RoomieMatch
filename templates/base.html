@@ -6,6 +6,12 @@
   {# Pages call the JSON API with fetch(); state-changing requests send this token in X-CSRFToken. #}
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block title %}RoomieMatch{% endblock %}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 26rem; margin: 3rem auto; padding: 0 1rem; color: #1f2a37; }
+    h1 { font-size: 2rem; line-height: 1.15; }
+    .lead { font-size: 1.15rem; }
+    .points { padding-left: 1.2rem; line-height: 1.6; }
+  </style>
 </head>
 <body>
   {% block content %}{% endblock %}

@@ -8,7 +8,7 @@ CS-GY 6063, Section I2, Group "Software Engineering I I2 - 2". Instructor: Raz S
 
 ## Current status
 
-Project setup only. The database schema, configuration, seed data, test runner, and CI are in place. **No user story is implemented yet.** Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
+Project setup plus a public home page. **No user story is implemented yet.** Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
 
 ## Run it locally
 
@@ -78,13 +78,34 @@ python manage.py seed_demo
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/health/ . You should see `{"status": "ok"}`.
+Open http://127.0.0.1:8000/ . You should see the RoomieMatch home page.
 
 Run `python manage.py migrate` again only after pulling changes that add a migration file.
 
 ### Optional: PostgreSQL in Docker instead
 
 If you would rather not install PostgreSQL, skip step 2 and run `docker compose up -d db`. It starts a PostgreSQL 16 container with the same database, user and password as above. Then continue from step 3.
+
+## Inspect the database
+
+To check what is stored (for example, that a registration landed), connect with `psql`:
+
+```bash
+psql -U roomiematch -d roomiematch -h localhost
+```
+
+The password is `roomiematch` (local development only). On Windows, if `psql` is not recognized, use the full path to the executable, for example `& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U roomiematch -d roomiematch -h localhost` (change `18` to your installed version).
+
+At the `roomiematch=#` prompt:
+
+```sql
+SELECT user_id, email, role FROM users;   -- registered accounts
+SELECT email, password_hash FROM users;   -- passwords are stored as hashes, never plain text
+\dt                                       -- list all tables
+\q                                        -- quit
+```
+
+Every SQL statement ends with a semicolon. Without psql, you can use Django instead: run `python manage.py shell`, then `from accounts.models import User` and `list(User.objects.values("email", "role"))`.
 
 ## Run the tests
 
@@ -111,7 +132,7 @@ The code follows the layered design from Sprint 2: URL routing, middleware, view
 
 | Folder | Component (Sprint 2) | Contains |
 |---|---|---|
-| `config/` | Routing and middleware settings | `settings.py`, `urls.py`, health check |
+| `config/` | Routing and middleware settings | `settings.py`, `urls.py` |
 | `accounts/` | Authentication | `User`, `Session` models; auth views/services (to come) |
 | `profiles/` | Profile Management, Preferences, Search | `Profile`, `Preference`, `Location` models |
 | `messaging/` | Messaging | `Conversation`, `Message` models |
