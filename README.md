@@ -12,7 +12,7 @@ Project setup plus a public home page. **No user story is implemented yet.** Tra
 
 ## Run it locally
 
-You need Python 3.12+, Git, and PostgreSQL 14+ installed on your computer (the default setup). Docker is an optional shortcut for the database only.
+You need Python 3.12+, Git, and PostgreSQL 14+ installed on your computer (the default setup).
 
 ### One-time setup
 
@@ -82,11 +82,7 @@ Open http://127.0.0.1:8000/ . You should see the RoomieMatch home page.
 
 Run `python manage.py migrate` again only after pulling changes that add a migration file.
 
-### Optional: PostgreSQL in Docker instead
-
-If you would rather not install PostgreSQL, skip step 2 and run `docker compose up -d db`. It starts a PostgreSQL 16 container with the same database, user and password as above. Then continue from step 3.
-
-## Inspect the database
+## Checking the database
 
 To check what is stored (for example, that a registration landed), connect with `psql`:
 
