@@ -4,7 +4,7 @@ A roommate-discovery web app: students create a profile and housing preferences,
 
 CS-GY 6063, Section I2, Group "Software Engineering I I2 - 2". Instructor: Raz Saremi.
 
-**Stack (from the Sprint 2 design):** Python, Django (HTML templates + JSON endpoints), PostgreSQL. Runs on localhost; AWS is optional.
+**Stack (from the Sprint 2 design):** Python, Django (HTML templates + JSON endpoints), PostgreSQL. Runs on localhost; AWS is optional for Sprint 3.
 
 ## Current status
 
