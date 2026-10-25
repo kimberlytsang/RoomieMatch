@@ -8,7 +8,7 @@ CS-GY 6063, Section I2, Group "Software Engineering I I2 - 2". Instructor: Raz S
 
 ## Current status
 
-Project setup plus a public home page. **No user story is implemented yet.** Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
+Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
 
 ## Run it locally
 
@@ -78,7 +78,7 @@ python manage.py seed_demo
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/ . You should see the RoomieMatch home page.
+Open http://127.0.0.1:8000/ . You should see the RoomieMatch home page with links to log in or create an account.
 
 Run `python manage.py migrate` again only after pulling changes that add a migration file.
 
@@ -106,6 +106,16 @@ SELECT email, password_hash FROM users;   -- passwords are stored as hashes, nev
 ```
 
 Every SQL statement ends with a semicolon. Without psql, you can use Django instead: run `python manage.py shell`, then `from accounts.models import User` and `list(User.objects.values("email", "role"))`.
+
+## Implemented endpoints
+
+| Method | Endpoint | Story | Success | Errors |
+|---|---|---|---|---|
+| POST | `/api/auth/register` | US-01 | 201, `user_id`, session cookie | 400, 409, 422 |
+| POST | `/api/auth/login` | US-02 | 200, `user_id`, session cookie | 400, 401 |
+| POST | `/api/auth/logout` | US-03 | 204, no body | 401 |
+
+Send JSON bodies with an `X-CSRFToken` header (state-changing requests without it get 403). Pages: `/` (shows who is signed in, with a Log out button), `/login/`, `/register/`.
 
 ## Run the tests
 

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Log in - RoomieMatch{% endblock %}
+{% block content %}
+<h1>Log in</h1>
+<form id="form">
+  <label for="email">Email</label>
+  <input id="email" type="email" autocomplete="email" required>
+  <label for="password">Password</label>
+  <input id="password" type="password" autocomplete="current-password" required>
+  <button type="submit">Log in</button>
+  <p class="error" id="error" role="alert"></p>
+</form>
+<p>New here? <a href="/register/">Create an account</a></p>
+<script>
+  document.getElementById("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const r = await postJson("/api/auth/login", {
+      email: document.getElementById("email").value,
+      password: document.getElementById("password").value,
+    });
+    if (r.status === 200) { window.location.href = "/"; return; }
+    document.getElementById("error").textContent =
+      (r.data && r.data.error) || "Something went wrong. Please try again.";
+  });
+</script>
+{% endblock %}

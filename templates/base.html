@@ -8,10 +8,33 @@
   <title>{% block title %}RoomieMatch{% endblock %}</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 26rem; margin: 3rem auto; padding: 0 1rem; color: #1f2a37; }
-    h1 { font-size: 2rem; line-height: 1.15; }
-    .lead { font-size: 1.15rem; }
-    .points { padding-left: 1.2rem; line-height: 1.6; }
+    label { display: block; margin-top: 1rem; font-weight: 600; }
+    input { width: 100%; padding: .5rem; margin-top: .25rem; box-sizing: border-box; }
+    button { margin-top: 1.25rem; padding: .55rem 1.1rem; cursor: pointer; }
+    .error { color: #b3261e; margin-top: 1rem; min-height: 1.2em; }
+    nav a { margin-right: 1rem; }
   </style>
+  <script>
+    // Shared helper: POST JSON to the API with the CSRF token. Returns {status, data}.
+    // The CSRF token is read from the cookie at the moment of the request, not from the
+    // copy saved in the page. Logging in changes the token, so a page that was loaded
+    // earlier (another tab, the Back button) would otherwise send an outdated one.
+    function csrfToken() {
+      const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+      return m ? decodeURIComponent(m[1]) : document.querySelector('meta[name="csrf-token"]').content;
+    }
+    async function postJson(url, body) {
+      const token = csrfToken();
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": token },
+        body: JSON.stringify(body || {}),
+      });
+      let data = null;
+      if (res.status !== 204) { try { data = await res.json(); } catch (e) {} }
+      return { status: res.status, data: data };
+    }
+  </script>
 </head>
 <body>
   {% block content %}{% endblock %}

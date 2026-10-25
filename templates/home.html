@@ -1,13 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<main>
-  <h1>Split the rent, not the stress.</h1>
-  <p class="lead">Search by budget, location and pets, then message the people you like.</p>
-  <ul class="points">
-    <li><strong>Set your preferences.</strong> Budget range, location and pet preferences.</li>
-    <li><strong>Browse profiles.</strong> Filter potential roommates to the ones that fit.</li>
-    <li><strong>Start the conversation.</strong> Message a potential roommate directly.</li>
-    <li><strong>Temporary Homepage - If you see this then your server is running successfully</strong></li>
-  </ul>
-</main>
+<h1>RoomieMatch</h1>
+{% if user.is_authenticated %}
+  <p>Signed in as <strong>{{ user.email }}</strong>.</p>
+  <button id="logout">Log out</button>
+  <p class="error" id="error"></p>
+  <script>
+    document.getElementById("logout").addEventListener("click", async () => {
+      const r = await postJson("/api/auth/logout");
+      if (r.status === 204 || r.status === 401) { window.location.href = "/login/"; }
+      else if (r.status === 403) { document.getElementById("error").textContent = "This page is out of date. Reload it and try again."; }
+      else { document.getElementById("error").textContent = "Could not log out. Please try again."; }
+    });
+  </script>
+{% else %}
+  <p>Split the rent, not the stress. Find a roommate who fits your budget, location and preferences.</p>
+  <nav><a href="/login/">Log in</a><a href="/register/">Create account</a></nav>
+{% endif %}
 {% endblock %}
