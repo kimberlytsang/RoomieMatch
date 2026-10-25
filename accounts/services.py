@@ -25,6 +25,22 @@ class WeakPassword(Exception):
         self.reasons = reasons
 
 
+def _validate_password(password, user=None):
+    if len(password) > MAX_PASSWORD_LENGTH:
+        raise WeakPassword([f"Password must be at most {MAX_PASSWORD_LENGTH} characters."])
+    password_errors = []
+    try:
+        validate_password(password, user=user)
+    except ValidationError as exc:
+        password_errors.extend(exc.messages)
+    if not any(character.isupper() for character in password):
+        password_errors.append("Password must include at least one uppercase letter.")
+    if not any(not character.isalnum() and not character.isspace() for character in password):
+        password_errors.append("Password must include at least one symbol.")
+    if password_errors:
+        raise WeakPassword(password_errors)
+
+
 def register_user(email, password):
     """US-01: create a user account. Passwords are hashed by Django before saving.
 
@@ -35,12 +51,7 @@ def register_user(email, password):
     except ValidationError:
         raise InvalidEmail("Enter a valid email address.")
 
-    if len(password) > MAX_PASSWORD_LENGTH:
-        raise WeakPassword([f"Password must be at most {MAX_PASSWORD_LENGTH} characters."])
-    try:
-        validate_password(password)
-    except ValidationError as exc:
-        raise WeakPassword(list(exc.messages))
+    _validate_password(password)
 
     # Email is unique ignoring case (citext). Check first for a clean error, and
     # still catch the database constraint in case two sign-ups race.

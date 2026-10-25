@@ -4,15 +4,15 @@ A roommate-discovery web app: students create a profile and housing preferences,
 
 CS-GY 6063, Section I2, Group "Software Engineering I I2 - 2". Instructor: Raz Saremi.
 
-**Stack (from the Sprint 2 design):** Python, Django (HTML templates + JSON endpoints), PostgreSQL. Runs on localhost; AWS is optional.
+**Stack (from the Sprint 2 design):** Python, Django (HTML templates + JSON endpoints), PostgreSQL. Runs on localhost; AWS is optional for Sprint 3.
 
 ## Current status
 
-Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
+Project setup plus a public home page. **No user story is implemented yet.** Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
 
 ## Run it locally
 
-You need Python 3.12+, Git, and PostgreSQL 14+ installed on your computer (the default setup). Docker is an optional shortcut for the database only.
+You need Python 3.12+, Git, and PostgreSQL 14+ installed on your computer (the default setup).
 
 ### One-time setup
 
@@ -78,15 +78,11 @@ python manage.py seed_demo
 python manage.py runserver
 ```
 
-Open http://127.0.0.1:8000/ . You should see the RoomieMatch home page with links to log in or create an account.
+Open http://127.0.0.1:8000/ . You should see the RoomieMatch home page.
 
 Run `python manage.py migrate` again only after pulling changes that add a migration file.
 
-### Optional: PostgreSQL in Docker instead
-
-If you would rather not install PostgreSQL, skip step 2 and run `docker compose up -d db`. It starts a PostgreSQL 16 container with the same database, user and password as above. Then continue from step 3.
-
-## Inspect the database
+## Checking the database
 
 To check what is stored (for example, that a registration landed), connect with `psql`:
 
@@ -106,16 +102,6 @@ SELECT email, password_hash FROM users;   -- passwords are stored as hashes, nev
 ```
 
 Every SQL statement ends with a semicolon. Without psql, you can use Django instead: run `python manage.py shell`, then `from accounts.models import User` and `list(User.objects.values("email", "role"))`.
-
-## Implemented endpoints
-
-| Method | Endpoint | Story | Success | Errors |
-|---|---|---|---|---|
-| POST | `/api/auth/register` | US-01 | 201, `user_id`, session cookie | 400, 409, 422 |
-| POST | `/api/auth/login` | US-02 | 200, `user_id`, session cookie | 400, 401 |
-| POST | `/api/auth/logout` | US-03 | 204, no body | 401 |
-
-Send JSON bodies with an `X-CSRFToken` header (state-changing requests without it get 403). Pages: `/` (shows who is signed in, with a Log out button), `/login/`, `/register/`.
 
 ## Run the tests
 

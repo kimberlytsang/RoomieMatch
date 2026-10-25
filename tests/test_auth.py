@@ -77,6 +77,19 @@ def test_register_weak_password_is_422(client, db, password):
     assert User.objects.count() == 0
 
 
+@pytest.mark.parametrize(("password", "message"), [
+    ("Ab1!", "This password is too short. It must contain at least 8 characters."),
+    ("lowercase123!", "Password must include at least one uppercase letter."),
+    ("Uppercase123", "Password must include at least one symbol."),
+    ("A!" + "a" * 127, "Password must be at most 128 characters."),
+])
+def test_register_returns_specific_password_requirement(client, db, password, message):
+    res = post(client, REGISTER, {"email": "new@example.com", "password": password})
+    assert res.status_code == 422
+    assert res.json()["error"] == message
+    assert User.objects.count() == 0
+
+
 def test_register_requires_csrf_token(db):
     strict = Client(enforce_csrf_checks=True)
     res = post(strict, REGISTER, {"email": "new@example.com", "password": GOOD_PASSWORD})
