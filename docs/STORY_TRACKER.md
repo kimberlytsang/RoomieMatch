@@ -11,6 +11,7 @@ Update this file in the same PR that changes a story's status. Status is To do, 
 | US-01 Registering an account | Kimberly | TBD | In progress | Registration feature fully implemented and pushed to branch; awaiting peer review | Yes: password requirements were specified, with specific validation messages; duplicate-email wording was clarified to `An account with this email already exists.`. |
 | US-02 Log in | Kimberly | TBD | In progress | Login feature fully implemented and pushed to branch; awaiting peer review | No known changes. |
 | US-03 Log out | Kimberly | TBD | In progress | Logout feature fully implemented and pushed to branch; awaiting peer review | No known changes. |
+| US-07 Search for potential roommates | Joyce | TBD | In progress | Implementing on branch `joyce`; PR link will be added when opened. | No known changes. |
 
 These stories remain In progress until reviewed and merged, their acceptance criteria pass, tests pass, and they work in the deployed or localhost build.
 

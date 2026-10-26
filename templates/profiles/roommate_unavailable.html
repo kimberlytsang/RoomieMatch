@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Profile unavailable - RoomieMatch{% endblock %}
+
+{% block header_action %}
+  <button class="header-button" id="logout" type="button">Log out</button>
+{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page">
+  <section class="empty-roommates" aria-labelledby="unavailable-title">
+    <h1 id="unavailable-title">Profile unavailable</h1>
+    <p>This roommate profile is no longer available.</p>
+    <a class="button-primary" href="{% url 'roommate-list' %}">Back to roommates</a>
+  </section>
+</main>
+{% endblock %}

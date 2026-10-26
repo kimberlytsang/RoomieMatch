@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Find roommates - RoomieMatch{% endblock %}
+
+{% block header_action %}
+  <button class="header-button" id="logout" type="button">Log out</button>
+{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page">
+  <section class="roommate-heading">
+    <p class="eyebrow">Find a roommate</p>
+    <h1>Find a roommate</h1>
+    <p>Browse people who are looking for a shared home.</p>
+  </section>
+
+  <section aria-labelledby="roommates-title">
+    <div class="roommates-section-heading">
+      <h2 id="roommates-title">Roommates</h2>
+      <p>{{ roommates|length }} roommate{{ roommates|pluralize }} found</p>
+    </div>
+
+    {% if roommates %}
+      <div class="roommate-grid">
+        {% for roommate in roommates %}
+          <article class="roommate-card">
+            <div class="roommate-avatar" aria-hidden="true">{{ roommate.display_name|first|upper }}</div>
+            <div class="roommate-card-body">
+              <h3>{{ roommate.display_name }}</h3>
+              <p class="roommate-location">{{ roommate.user.preference.location }}</p>
+              <p class="roommate-budget">{{ roommate.user.preference.get_budget_range_display }} / month</p>
+              <p class="roommate-bio">{{ roommate.bio|default:"This roommate has not added an introduction yet." }}</p>
+              <p class="preference-chip">{{ roommate.user.preference.get_pets_preference_display }}</p>
+              <a class="roommate-profile-link" href="{% url 'roommate-detail' roommate.user_id %}">View profile</a>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <section class="empty-roommates" aria-labelledby="empty-title">
+        <h2 id="empty-title">No matches found</h2>
+        <p>There are no other roommate profiles available right now. Please check back later.</p>
+      </section>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
