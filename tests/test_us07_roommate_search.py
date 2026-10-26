@@ -23,7 +23,7 @@ def make_roommate(email, name, location):
     Preference.objects.create(
         user=user,
         location=location,
-        budget_range=BudgetRange.B1501_2000,
+        budget_range=BudgetRange.B2501_3000,
         pets_preference=PetsPreference.NO_PETS,
     )
     return user
@@ -69,7 +69,7 @@ def test_selected_roommate_profile_shows_shared_preferences(client, location):
     assert response.status_code == 200
     assert b"Maya" in response.content
     assert b"Manhattan, NY" in response.content
-    assert b"$1,501-$2,000 / month" in response.content
+    assert b"$2,501-$3,000 / month" in response.content
     assert b"No pets" in response.content
 
 
