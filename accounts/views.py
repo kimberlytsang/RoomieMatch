@@ -9,7 +9,7 @@ from config.api import BadRequest, authenticated_only, error, json_body
 from . import services
 
 
-def _credentials(request):
+def _credentials(request, *, list_missing_fields=False):
     """Return (email, password) from the JSON body, or an error response.
 
     Both fields must be non-empty strings (400 otherwise)."""
@@ -18,15 +18,23 @@ def _credentials(request):
     except BadRequest as exc:
         return None, error(400, str(exc))
     email, password = data.get("email"), data.get("password")
-    if not isinstance(email, str) or not email.strip() or not isinstance(password, str) or not password:
-        return None, error(400, "Email and password are required.")
+    missing_fields = []
+    if not isinstance(email, str) or not email.strip():
+        missing_fields.append("Email")
+    if not isinstance(password, str) or not password:
+        missing_fields.append("Password")
+    if missing_fields:
+        if list_missing_fields:
+            missing = " and ".join(missing_fields)
+            return None, error(400, f"Please fill out the missing fields: {missing}.")
+        return None, error(400, "Email or password not provided.")
     return (email, password), None
 
 
 @require_POST
 def register(request):
     """POST /api/auth/register (US-01). Public. 201, 400, 409, 422."""
-    creds, problem = _credentials(request)
+    creds, problem = _credentials(request, list_missing_fields=True)
     if problem:
         return problem
     email, password = creds

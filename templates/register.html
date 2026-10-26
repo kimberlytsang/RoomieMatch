@@ -48,9 +48,19 @@
     const form = event.currentTarget;
     const errorMessage = document.getElementById("error");
     const submitButton = form.querySelector("button[type='submit']");
+    const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
     const confirmation = document.getElementById("confirmation").value;
     errorMessage.textContent = "";
+
+    const missingFields = [];
+    if (!email.trim()) missingFields.push("Email");
+    if (!password) missingFields.push("Password");
+    if (!confirmation) missingFields.push("Confirm password");
+    if (missingFields.length) {
+      errorMessage.textContent = `Please fill out the missing fields: ${missingFields.join(" and ")}.`;
+      return;
+    }
 
     if (password !== confirmation) {
       errorMessage.textContent = "Passwords do not match.";
@@ -60,7 +70,7 @@
     submitButton.disabled = true;
     try {
       const response = await postJson("/api/auth/register", {
-        email: document.getElementById("email").value,
+        email: email,
         password: password,
       });
       if (response.status === 201) {

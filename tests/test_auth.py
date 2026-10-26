@@ -59,6 +59,20 @@ def test_register_rejects_missing_or_invalid_fields_with_400(client, db, body):
     assert User.objects.count() == 0
 
 
+@pytest.mark.parametrize(("body", "message"), [
+    ({}, "Please fill out the missing fields: Email and Password."),
+    ({"email": "new@example.com"}, "Please fill out the missing fields: Password."),
+    ({"password": GOOD_PASSWORD}, "Please fill out the missing fields: Email."),
+    ({"email": "", "password": GOOD_PASSWORD}, "Please fill out the missing fields: Email."),
+    ({"email": "new@example.com", "password": ""}, "Please fill out the missing fields: Password."),
+])
+def test_register_lists_missing_fields(client, db, body, message):
+    res = post(client, REGISTER, body)
+    assert res.status_code == 400
+    assert res.json()["error"] == message
+    assert User.objects.count() == 0
+
+
 def test_register_rejects_non_json_body_with_400(client, db):
     res = client.post(REGISTER, data="email=a@b.com", content_type="text/plain")
     assert res.status_code == 400
@@ -123,7 +137,9 @@ def test_login_email_is_case_insensitive(client, user):
     {"email": "", "password": ""},
 ])
 def test_login_missing_fields_is_400(client, user, body):
-    assert post(client, LOGIN, body).status_code == 400
+    res = post(client, LOGIN, body)
+    assert res.status_code == 400
+    assert res.json()["error"] == "Email or password not provided."
 
 
 def test_login_wrong_password_is_401_without_session(client, user):
