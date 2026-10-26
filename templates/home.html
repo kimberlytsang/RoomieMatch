@@ -12,6 +12,9 @@
       <h1>Find your<br>next <span>roommate</span></h1>
       {% if user.is_authenticated %}
         <p class="hero-description">You’re signed in as <strong>{{ user.email }}</strong>. Your next chapter starts with the right fit.</p>
+        <div class="hero-actions">
+          <a class="button-primary" href="{% url 'roommate-list' %}">Browse roommates</a>
+        </div>
       {% else %}
         <p class="hero-description">Create an account. Find the right fit. Make your next place feel like home.</p>
         <div class="hero-actions">
