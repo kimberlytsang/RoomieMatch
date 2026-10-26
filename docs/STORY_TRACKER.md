@@ -4,19 +4,20 @@ Update this file in the same PR that changes a story's status. Status is To do, 
 
 ## Sprint backlog (chosen stories)
 
-**Sprint goal:** _one sentence: what a user can do at the end of this sprint._
+**Sprint goal:** Users can create a RoomieMatch account, log in, log out, and create user profile.
 
 | Story | Owner | Estimate | Status | Pull requests / commits | Acceptance criteria changed? (reason) |
 |---|---|---|---|---|---|
-| | | | | | |
+| US-01 Registering an account | Kimberly | TBD | In progress | Registration feature fully implemented and pushed to branch; awaiting peer review | Yes: password requirements were specified, with specific validation messages; duplicate-email wording was clarified to `An account with this email already exists.`. |
+| US-02 Log in | Kimberly | TBD | In progress | Login feature fully implemented and pushed to branch; awaiting peer review | No known changes. |
+| US-03 Log out | Kimberly | TBD | In progress | Logout feature fully implemented and pushed to branch; awaiting peer review | No known changes. |
+
+These stories remain In progress until reviewed and merged, their acceptance criteria pass, tests pass, and they work in the deployed or localhost build.
 
 ## Product backlog (pending stories, in priority order)
 
 | Priority | Story | Level | Estimate | Notes |
 |---|---|---|---|---|
-| | US-01 Registering an account | MVP | | |
-| | US-02 Log in | MVP | | |
-| | US-03 Log out | MVP | | |
 | | US-04 Budget preference | MVP | | |
 | | US-05 Location preference | MVP | | |
 | | US-06 Lifestyle preference | MVP | | |
