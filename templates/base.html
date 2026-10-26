@@ -33,18 +33,18 @@
     }
   </script>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
   <header class="site-header">
     <div class="header-inner">
       <a class="brand" href="/" aria-label="RoomieMatch home">
         <img class="brand-mark" src="{% static 'images/RoomieMatchLogo.png' %}" alt="" aria-hidden="true">
         <span>RoomieMatch</span>
       </a>
-      {% if user.is_authenticated %}
-        <nav class="site-nav" aria-label="Primary navigation">
-          <a href="{% url 'roommate-list' %}">Find roommates</a>
-        </nav>
-      {% endif %}
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="{% url 'roommate-list' %}">Find roommates</a>
+        <a href="/#how-it-works">How it works</a>
+        <span class="nav-unavailable" title="Chats will be available in a future release" aria-label="Chats, coming soon">Chats</span>
+      </nav>
       <div class="header-action">
         {% if user.is_authenticated %}
           <span class="header-email">{{ user.email }}</span>
