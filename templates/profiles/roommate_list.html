@@ -82,5 +82,14 @@
       </section>
     {% endif %}
   </section>
+
+  <footer class="roommate-footer">
+    <span class="roommate-footer-brand">RoomieMatch</span>
+    <nav class="roommate-footer-links" aria-label="Roommate page navigation">
+      <a href="{% url 'roommate-list' %}">Find roommates</a>
+      <span title="My profile will be available in a future release">My profile</span>
+      <span title="Help will be available in a future release">Help</span>
+    </nav>
+  </footer>
 </main>
 {% endblock %}
