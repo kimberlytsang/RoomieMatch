@@ -1,26 +1,66 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Log in - RoomieMatch{% endblock %}
 {% block content %}
-<h1>Log in</h1>
-<form id="form">
-  <label for="email">Email</label>
-  <input id="email" type="email" autocomplete="email" required>
-  <label for="password">Password</label>
-  <input id="password" type="password" autocomplete="current-password" required>
-  <button type="submit">Log in</button>
-  <p class="error" id="error" role="alert"></p>
-</form>
-<p>New here? <a href="/register/">Create an account</a></p>
+<div class="page-wrap auth-page login-page">
+  <section class="auth-layout">
+    <div class="auth-story">
+      <p class="eyebrow">Your next chapter</p>
+      <h1>Welcome<br>back</h1>
+      <p class="auth-description">Pick up where you left off. Chat with someone who could be your next roommate.</p>
+      <div class="auth-portraits" aria-label="RoomieMatch community">
+        <div class="auth-portrait auth-portrait-male">
+          <img src="{% static 'images/male_homepage_image.jpg' %}" alt="">
+        </div>
+        <div class="auth-portrait auth-portrait-female">
+          <img src="{% static 'images/female_homepage_image.jpg' %}" alt="">
+        </div>
+      </div>
+    </div>
+    <section class="auth-panel" aria-labelledby="form-title">
+      <p class="panel-kicker">Good to see you</p>
+      <h2 id="form-title">Welcome back</h2>
+      <p class="panel-description">Log in and find your next roommate here.</p>
+      <form id="form" novalidate>
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+        <div class="field-group">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+        </div>
+        <button class="button-primary form-submit" type="submit">Log in</button>
+        <p class="form-message" id="error" role="alert" aria-live="polite"></p>
+      </form>
+      <p class="form-switch">New to RoomieMatch? <a href="/register/">Create an account</a></p>
+    </section>
+  </section>
+</div>
 <script>
-  document.getElementById("form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const r = await postJson("/api/auth/login", {
-      email: document.getElementById("email").value,
-      password: document.getElementById("password").value,
-    });
-    if (r.status === 200) { window.location.href = "/"; return; }
-    document.getElementById("error").textContent =
-      (r.data && r.data.error) || "Something went wrong. Please try again.";
+  document.getElementById("form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const errorMessage = document.getElementById("error");
+    const submitButton = form.querySelector("button[type='submit']");
+    errorMessage.textContent = "";
+    submitButton.disabled = true;
+    try {
+      const response = await postJson("/api/auth/login", {
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value,
+      });
+      if (response.status === 200) {
+        window.location.href = "/";
+        return;
+      }
+      errorMessage.textContent = (response.data && response.data.error)
+        || "Something went wrong. Please try again.";
+    } catch (error) {
+      errorMessage.textContent = "Could not log in. Please check your connection and try again.";
+    } finally {
+      submitButton.disabled = false;
+    }
   });
 </script>
 {% endblock %}

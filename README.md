@@ -8,7 +8,7 @@ CS-GY 6063, Section I2, Group "Software Engineering I I2 - 2". Instructor: Raz S
 
 ## Current status
 
-Project setup plus a public home page. **No user story is implemented yet.** Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
+Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
 
 ## Run it locally
 
@@ -121,23 +121,6 @@ Tests use their own temporary database, so your demo data is not touched. Each c
 | alex@, sam@, jordan@, taylor@, casey@, riley@ `roomiematch.test` | Seeker (with profile and preferences) | DemoPass123! |
 
 It also loads the list of locations (Manhattan, Brooklyn, Queens, The Bronx, Staten Island, Jersey City, Hoboken). These passwords are for local demos only.
-
-## Project layout
-
-The code follows the layered design from Sprint 2: URL routing, middleware, views, services, models.
-
-| Folder | Component (Sprint 2) | Contains |
-|---|---|---|
-| `config/` | Routing and middleware settings | `settings.py`, `urls.py` |
-| `accounts/` | Authentication | `User`, `Session` models; auth views/services (to come) |
-| `profiles/` | Profile Management, Preferences, Search | `Profile`, `Preference`, `Location` models |
-| `messaging/` | Messaging | `Conversation`, `Message` models |
-| `support/` | Support | `SupportRequest` model |
-| `templates/` | Frontend pages | `base.html` (includes the CSRF token for `fetch` calls) |
-| `tests/` | Automated tests | Setup and schema checks so far |
-| `docs/` | Sprint documents | Story tracker, design changes |
-
-Each component has `urls.py` (routes), `views.py` (request handling and permissions), and `services.py` (business logic). Views call services, and only services and models touch the database.
 
 ## Configuration
 

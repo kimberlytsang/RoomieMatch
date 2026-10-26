@@ -1,3 +1,4 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,14 +7,10 @@
   {# Pages call the JSON API with fetch(); state-changing requests send this token in X-CSRFToken. #}
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>{% block title %}RoomieMatch{% endblock %}</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 26rem; margin: 3rem auto; padding: 0 1rem; color: #1f2a37; }
-    label { display: block; margin-top: 1rem; font-weight: 600; }
-    input { width: 100%; padding: .5rem; margin-top: .25rem; box-sizing: border-box; }
-    button { margin-top: 1.25rem; padding: .55rem 1.1rem; cursor: pointer; }
-    .error { color: #b3261e; margin-top: 1rem; min-height: 1.2em; }
-    nav a { margin-right: 1rem; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
   <script>
     // Shared helper: POST JSON to the API with the CSRF token. Returns {status, data}.
     // The CSRF token is read from the cookie at the moment of the request, not from the
@@ -37,6 +34,22 @@
   </script>
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="RoomieMatch home">
+        <img class="brand-mark" src="{% static 'images/RoomieMatchLogo.png' %}" alt="" aria-hidden="true">
+        <span>RoomieMatch</span>
+      </a>
+      <div class="header-action">
+        {% if user.is_authenticated %}
+          <span class="header-email">{{ user.email }}</span>
+          {% block header_action %}<a class="header-button" href="/">Account</a>{% endblock %}
+        {% else %}
+          <a class="header-button" href="/login/">Log in</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
   {% block content %}{% endblock %}
 </body>
 </html>
