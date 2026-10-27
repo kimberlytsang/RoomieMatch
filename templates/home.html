@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}RoomieMatch - Find your next roommate{% endblock %}
-{% block body_class %}home-theme{% endblock %}
 {% block header_action %}
   <button class="header-button" id="logout" type="button">Log out</button>
 {% endblock %}
@@ -31,20 +30,6 @@
       <div class="portrait-frame portrait-frame-female">
         <img src="{% static 'images/female_homepage_image.jpg' %}" alt="">
       </div>
-    </div>
-  </section>
-  <section class="how-it-works" id="how-it-works" aria-labelledby="how-it-works-title">
-    <div class="how-it-works-heading">
-      <div>
-        <p class="eyebrow">How it works</p>
-        <h2 id="how-it-works-title">Find the right fit in three steps.</h2>
-      </div>
-      <a class="back-to-top" href="#find-roommates">↑ Back to top</a>
-    </div>
-    <div class="how-it-works-grid">
-      <article><span>1</span><h3>Set your preferences</h3><p>Share your preferred location, budget, and pet needs.</p></article>
-      <article><span>2</span><h3>Browse roommates</h3><p>Filter available profiles and view the details that matter.</p></article>
-      <article><span>3</span><h3>Connect with confidence</h3><p>Choose a potential roommate before starting a conversation.</p></article>
     </div>
   </section>
   <p class="logout-error" id="logout-error" role="alert" aria-live="polite"></p>
