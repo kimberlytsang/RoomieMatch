@@ -33,7 +33,7 @@ h1, h2, h3 { font-family: "Outfit", "DM Sans", sans-serif; letter-spacing: 0; }
 
 .site-header {
   position: relative;
-  z-index: 2;
+  z-index: 10;
   border-bottom: 1px solid var(--line);
   background: rgba(37, 38, 61, .96);
 }
@@ -73,6 +73,43 @@ h1, h2, h3 { font-family: "Outfit", "DM Sans", sans-serif; letter-spacing: 0; }
 .site-nav a { color: #d4d3dc; font-size: 12px; font-weight: 700; text-decoration: none; }
 .site-nav a:hover, .site-nav a:focus-visible { color: var(--coral); }
 .header-email { overflow: hidden; max-width: 190px; color: #d4d3dc; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu { position: relative; }
+.account-menu-toggle { gap: 8px; padding: 5px 8px; border-color: var(--coral); }
+.account-menu-caret { font-size: 14px; line-height: 1; }
+.account-menu-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 5;
+  width: max-content;
+  min-width: 176px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 3px;
+  color: #fff;
+  background: var(--ink-deep);
+  box-shadow: 0 8px 18px rgba(9, 10, 20, .16);
+}
+.account-menu-panel[hidden] { display: none; }
+.account-menu-panel a, .account-menu-panel button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.account-menu-panel a + button { border-top: 1px solid rgba(255, 255, 255, .2); }
+.account-menu-panel a:hover, .account-menu-panel a:focus-visible,
+.account-menu-panel button:hover, .account-menu-panel button:focus-visible {
+  color: var(--ink-deep);
+  background: var(--coral);
+}
+.account-menu-panel button:disabled { cursor: wait; opacity: .68; }
 
 .header-button {
   display: inline-flex;
@@ -244,6 +281,32 @@ body:has(.roommate-page) .site-nav a, body:has(.roommate-page) .header-email { c
 body:has(.roommate-page) .site-nav a:hover, body:has(.roommate-page) .site-nav a:focus-visible { color: var(--coral); }
 body:has(.roommate-page) .header-button { border-color: var(--coral); color: #b84a3f; }
 body:has(.roommate-page) .header-button:hover, body:has(.roommate-page) .header-button:focus-visible { color: #fff; background: var(--coral); }
+body:has(.roommate-page) .account-menu-panel { color: #3f231a; background: #FDF0E9; }
+body:has(.roommate-page) .account-menu-panel { border-color: #ffcabb; }
+body:has(.roommate-page) .account-menu-panel a + button { border-top-color: #ffcabb; }
+body:has(.roommate-page) .account-menu-panel a:hover, body:has(.roommate-page) .account-menu-panel a:focus-visible,
+body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-page) .account-menu-panel button:focus-visible {
+  color: #b84a3f;
+  background: #fff1ec;
+}
+.account-settings-page { min-height: calc(100vh - 78px); padding: 58px 26px 72px; }
+.account-settings-page .roommate-heading > p:last-child { color: #806d66; }
+.account-settings-layout { display: grid; max-width: 1040px; grid-template-columns: minmax(0, 1.5fr) minmax(245px, .75fr); align-items: start; gap: 34px; }
+.account-settings-card { padding: 24px; border: 1px solid var(--line); border-radius: 7px; color: #fff; background: var(--ink-deep); box-shadow: 0 12px 28px rgba(9, 10, 20, .2); }
+.account-settings-page .account-settings-card { padding: 0; border: 0; border-radius: 0; color: #3f231a; background: transparent; box-shadow: none; }
+.password-settings-card { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.account-settings-card h2 { margin-bottom: 5px; font-size: 21px; }
+.account-settings-card p { margin: 0; color: #d1d0da; font-size: 13px; overflow-wrap: anywhere; }
+.account-settings-card .button-primary { flex: 0 0 auto; color: #fff; }
+.password-settings-form { margin-top: 20px; }
+.password-settings-form .field-group label { color: #3f231a; }
+.password-settings-form .field-group input { height: 42px; }
+.password-settings-form .field-hint { color: #806d66; }
+.password-settings-form .button-primary { min-width: 150px; }
+.password-form-message { min-height: 0; margin: 12px 0 0; color: #287044; font-size: 12px; }
+.password-form-message.is-error { color: #a3332d; }
+.account-settings-side { grid-column: 2; grid-row: 1; padding-top: 3px; }
+.account-settings-email, .account-settings-inactivity { margin: 0 0 12px; color: #806d66; font-size: 12px; overflow-wrap: anywhere; }
 .roommate-heading { max-width: 610px; margin-bottom: 38px; }
 .roommate-heading h1, .roommate-detail-card h1 { margin-bottom: 10px; font-size: clamp(38px, 5vw, 58px); font-weight: 700; line-height: 1; }
 .roommate-heading > p:last-child { margin-bottom: 0; color: #806d66; font-size: 14px; }
@@ -317,11 +380,11 @@ body:has(.roommate-page) .header-button:hover, body:has(.roommate-page) .header-
 
 @media (max-width: 640px) {
   .header-inner, .page-wrap { width: min(100% - 36px, 480px); }
-  .header-inner { height: 66px; }
+  .header-inner { height: 66px; grid-template-columns: 1fr auto; gap: 8px; }
   .brand { font-size: 15px; }
   .header-action { gap: 8px; }
   .site-nav { display: none; }
-  .header-email { display: none; }
+  .header-email { max-width: 75px; }
   .header-button { min-width: 76px; min-height: 34px; }
   .home-hero { grid-template-columns: 1fr; gap: 22px; padding: 45px 0 42px; }
   .hero-copy { padding-bottom: 0; }
@@ -347,6 +410,7 @@ body:has(.roommate-page) .header-button:hover, body:has(.roommate-page) .header-
   .register-page .auth-portrait { width: 104px; height: 124px; }
   .register-page .auth-portrait-female { height: 134px; }
   .roommate-page { min-height: calc(100vh - 66px); padding: 38px 0 45px; }
+  .account-settings-page { min-height: calc(100vh - 66px); padding: 38px 0 45px; }
   .roommate-heading { margin-bottom: 30px; }
   .roommate-grid { grid-template-columns: 1fr; }
   .roommate-filters { grid-template-columns: 1fr; gap: 12px; padding: 16px; }
@@ -354,6 +418,8 @@ body:has(.roommate-page) .header-button:hover, body:has(.roommate-page) .header-
   .roommate-detail-card { grid-template-columns: 1fr; gap: 22px; padding: 23px; }
   .roommate-avatar-large { height: 170px; }
   .roommate-facts { grid-template-columns: 1fr; }
+  .account-settings-layout { grid-template-columns: 1fr; }
+  .account-settings-card { padding: 20px; }
 }
 
 @media (max-height: 640px) and (min-width: 901px) {

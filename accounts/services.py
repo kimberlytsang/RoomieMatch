@@ -25,6 +25,14 @@ class WeakPassword(Exception):
         self.reasons = reasons
 
 
+class IncorrectCurrentPassword(Exception):
+    pass
+
+
+class PasswordUnchanged(Exception):
+    pass
+
+
 def _validate_password(password, user=None):
     if len(password) > MAX_PASSWORD_LENGTH:
         raise WeakPassword([f"Password must be at most {MAX_PASSWORD_LENGTH} characters."])
@@ -35,8 +43,10 @@ def _validate_password(password, user=None):
         password_errors.extend(exc.messages)
     if not any(character.isupper() for character in password):
         password_errors.append("Password must include at least one uppercase letter.")
+    if not any(character.isdigit() for character in password):
+        password_errors.append("Password must include at least one number.")
     if not any(not character.isalnum() and not character.isspace() for character in password):
-        password_errors.append("Password must include at least one symbol.")
+        password_errors.append("Password must include at least one special character.")
     if password_errors:
         raise WeakPassword(password_errors)
 
@@ -69,3 +79,14 @@ def authenticate_user(request, email, password):
 
     The caller does not learn whether the email or the password was wrong."""
     return authenticate(request, email=email.strip(), password=password)
+
+
+def change_password(user, current_password, new_password):
+    """Validate the current password and save a new one without ending the session."""
+    if not user.check_password(current_password):
+        raise IncorrectCurrentPassword
+    if user.check_password(new_password):
+        raise PasswordUnchanged
+    _validate_password(new_password, user=user)
+    user.set_password(new_password)
+    user.save(update_fields=["password"])

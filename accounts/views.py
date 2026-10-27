@@ -1,6 +1,6 @@
 """View layer: parse the request, enforce permissions, call services, return JSON.
 Business rules live in services.py, not here."""
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -70,3 +70,35 @@ def logout_view(request):
     """POST /api/auth/logout (US-03). Authenticated. 204 with no body, 401."""
     logout(request)  # deletes the server-side session and clears the cookie
     return HttpResponse(status=204)
+
+
+@require_POST
+@authenticated_only
+def change_password(request):
+    """POST /api/auth/password/change. Authenticated. 200, 400, 401, 422."""
+    try:
+        data = json_body(request)
+    except BadRequest as exc:
+        return error(400, str(exc))
+
+    current_password = data.get("current_password")
+    new_password = data.get("new_password")
+    confirm_password = data.get("confirm_password")
+    if not all(isinstance(value, str) and value for value in (
+        current_password, new_password, confirm_password
+    )):
+        return error(400, "Current password, new password, and confirmation are required.")
+    if new_password != confirm_password:
+        return error(400, "New password and confirmation password do not match.")
+
+    try:
+        services.change_password(request.user, current_password, new_password)
+    except services.IncorrectCurrentPassword:
+        return error(400, "Current password is incorrect.")
+    except services.PasswordUnchanged:
+        return error(400, "This is your current password. Please create a different one.")
+    except services.WeakPassword as exc:
+        return error(422, str(exc))
+
+    update_session_auth_hash(request, request.user)
+    return JsonResponse({"message": "Password updated successfully."})

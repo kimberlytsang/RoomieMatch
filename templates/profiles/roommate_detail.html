@@ -2,10 +2,6 @@
 
 {% block title %}{{ roommate.display_name }} - RoomieMatch{% endblock %}
 
-{% block header_action %}
-  <button class="header-button" id="logout" type="button">Log out</button>
-{% endblock %}
-
 {% block content %}
 <main class="page-wrap roommate-page roommate-detail-page">
   <a class="back-link" href="{% url 'roommate-list' %}">← Back to roommates</a>

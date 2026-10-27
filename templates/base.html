@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20261027-8">
   <script>
     // Shared helper: POST JSON to the API with the CSRF token. Returns {status, data}.
     // The CSRF token is read from the cookie at the moment of the request, not from the
@@ -47,8 +47,16 @@
       {% endif %}
       <div class="header-action">
         {% if user.is_authenticated %}
-          <span class="header-email">{{ user.email }}</span>
-          {% block header_action %}<a class="header-button" href="/">Account</a>{% endblock %}
+          <div class="account-menu">
+            <button class="header-button account-menu-toggle" id="account-menu-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="account-menu">
+              <span class="header-email">{{ user.email }}</span>
+              <span class="account-menu-caret" aria-hidden="true">&#9662;</span>
+            </button>
+            <div class="account-menu-panel" id="account-menu" hidden>
+              <a href="{% url 'account-settings' %}">Account settings</a>
+              <button type="button" data-logout>Log out</button>
+            </div>
+          </div>
         {% else %}
           <a class="header-button" href="/login/">Log in</a>
         {% endif %}
@@ -57,8 +65,33 @@
   </header>
   {% block content %}{% endblock %}
   <script>
-    const logoutButton = document.getElementById("logout");
-    if (logoutButton) {
+    const accountMenuToggle = document.getElementById("account-menu-toggle");
+    const accountMenu = document.getElementById("account-menu");
+    if (accountMenuToggle && accountMenu) {
+      const closeAccountMenu = () => {
+        accountMenu.hidden = true;
+        accountMenuToggle.setAttribute("aria-expanded", "false");
+      };
+
+      accountMenuToggle.addEventListener("click", () => {
+        const isExpanded = accountMenuToggle.getAttribute("aria-expanded") === "true";
+        accountMenu.hidden = isExpanded;
+        accountMenuToggle.setAttribute("aria-expanded", String(!isExpanded));
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".account-menu")) closeAccountMenu();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !accountMenu.hidden) {
+          closeAccountMenu();
+          accountMenuToggle.focus();
+        }
+      });
+    }
+
+    document.querySelectorAll("[data-logout]").forEach((logoutButton) => {
       logoutButton.addEventListener("click", async () => {
         logoutButton.disabled = true;
         try {
@@ -74,7 +107,7 @@
           logoutButton.disabled = false;
         }
       });
-    }
+    });
   </script>
 </body>
 </html>

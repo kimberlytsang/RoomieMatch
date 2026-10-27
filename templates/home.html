@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}RoomieMatch - Find your next roommate{% endblock %}
-{% block header_action %}
-  <button class="header-button" id="logout" type="button">Log out</button>
-{% endblock %}
 {% block content %}
 <div class="page-wrap home-page">
   <section class="home-hero" id="find-roommates">
@@ -32,6 +29,5 @@
       </div>
     </div>
   </section>
-  <p class="logout-error" id="logout-error" role="alert" aria-live="polite"></p>
 </div>
 {% endblock %}

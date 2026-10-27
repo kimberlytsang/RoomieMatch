@@ -4,4 +4,4 @@ Where the code departs from the Sprint 2 design: one line naming what changed an
 
 | # | Change | Why |
 |---|---|---|
-| 1 | US-01 rejects passwords that are shorter than 8 characters, common, entirely numeric, longer than 128 characters, or missing an uppercase letter or symbol. | Sprint 2 specifies a weak-password error and asks for requirements to be shown on the form, but leaves the exact rules and error wording open; these rules were defined during implementation. |
+| 1 | US-01 / US-13 passwords must be 8–128 characters, not common or entirely numeric, and include an uppercase letter, a number, and a special character. | Sprint 2 specifies a weak-password error and asks for requirements to be shown on the form, but leaves the exact rules and error wording open; these rules were defined during implementation. |
