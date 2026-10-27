@@ -49,7 +49,7 @@ class Command(BaseCommand):
             user = User.objects.filter(email=email).first()
             if user is None:
                 user = User.objects.create_user(email, DEMO_PASSWORD)
-            Preference.objects.get_or_create(
+            Preference.objects.update_or_create(
                 user=user,
                 defaults={"location": locations[city], "budget_range": budget, "pets_preference": pets},
             )

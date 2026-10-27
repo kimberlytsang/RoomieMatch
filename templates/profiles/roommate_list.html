@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Find roommates - RoomieMatch{% endblock %}
+
+{% block header_action %}
+  <button class="header-button" id="logout" type="button">Log out</button>
+{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page">
+  <section class="roommate-heading">
+    <p class="eyebrow">Find a roommate</p>
+    <h1>Find a roommate</h1>
+    <p>Choose a location, budget, and pet preference to narrow your search.</p>
+  </section>
+
+  <form class="roommate-filters" method="get" aria-label="Filter roommates">
+    <div class="filter-field">
+      <label for="location">Location</label>
+      <select id="location" name="location">
+        <option value="">City or neighborhood</option>
+        {% for location in locations %}
+          <option value="{{ location.location_id }}"{% if selected_filters.location == location.location_id %} selected{% endif %}>{{ location }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="budget">Budget</label>
+      <select id="budget" name="budget">
+        <option value="">Any budget</option>
+        {% for value, label in budget_ranges %}
+          <option value="{{ value }}"{% if selected_filters.budget == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="pets">Preferences</label>
+      <select id="pets" name="pets">
+        <option value="">No preferences</option>
+        {% for value, label in pets_preferences %}
+          <option value="{{ value }}"{% if selected_filters.pets == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-actions">
+      <a class="filter-clear" href="{% url 'roommate-list' %}">Clear all filters</a>
+      <button class="button-primary" type="submit">Search</button>
+    </div>
+  </form>
+
+  <section aria-labelledby="roommates-title">
+    <div class="roommates-section-heading">
+      <h2 id="roommates-title">Roommates</h2>
+      {% if filters_active %}
+        <p>{{ roommates|length }} match{{ roommates|pluralize:"es" }} found</p>
+      {% else %}
+        <p>Showing all roommates</p>
+      {% endif %}
+    </div>
+
+    {% if roommates %}
+      <div class="roommate-grid">
+        {% for roommate in roommates %}
+          <article class="roommate-card">
+            <div class="roommate-avatar" aria-hidden="true">{{ roommate.display_name|first|upper }}</div>
+            <div class="roommate-card-body">
+              <h3>{{ roommate.display_name }}</h3>
+              <p class="roommate-location">{{ roommate.user.preference.location }}</p>
+              <p class="roommate-budget">{{ roommate.user.preference.get_budget_range_display }} / month</p>
+              <p class="roommate-bio">{{ roommate.bio|default:"This roommate has not added an introduction yet." }}</p>
+              <p class="preference-chip">{{ roommate.user.preference.get_pets_preference_display }}</p>
+              <a class="roommate-profile-link" href="{% url 'roommate-detail' roommate.user_id %}">View profile</a>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <section class="empty-roommates" aria-labelledby="empty-title">
+        <h2 id="empty-title">No matches found</h2>
+        <p>{% if filters_active %}Try different filters or clear them to browse everyone.{% else %}There are no other roommate profiles available right now. Please check back later.{% endif %}</p>
+        {% if filters_active %}<a class="button-primary" href="{% url 'roommate-list' %}">Clear all filters</a>{% endif %}
+      </section>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

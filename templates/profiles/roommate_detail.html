@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{{ roommate.display_name }} - RoomieMatch{% endblock %}
+
+{% block header_action %}
+  <button class="header-button" id="logout" type="button">Log out</button>
+{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page roommate-detail-page">
+  <a class="back-link" href="{% url 'roommate-list' %}">← Back to roommates</a>
+  <article class="roommate-detail-card">
+    <div class="roommate-avatar roommate-avatar-large" aria-hidden="true">{{ roommate.display_name|first|upper }}</div>
+    <div>
+      <p class="eyebrow">Roommate profile</p>
+      <h1>{{ roommate.display_name }}</h1>
+      <p class="roommate-location">{{ roommate.user.preference.location }}</p>
+      <p class="roommate-bio">{{ roommate.bio|default:"This roommate has not added an introduction yet." }}</p>
+      <dl class="roommate-facts">
+        <div><dt>Budget</dt><dd>{{ roommate.user.preference.get_budget_range_display }} / month</dd></div>
+        <div><dt>Pet preference</dt><dd>{{ roommate.user.preference.get_pets_preference_display }}</dd></div>
+      </dl>
+    </div>
+  </article>
+</main>
+{% endblock %}
