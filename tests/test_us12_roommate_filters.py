@@ -70,7 +70,7 @@ def test_multiple_filters_require_all_selected_preferences(client, roommates):
 def test_filters_with_no_matches_show_empty_state_and_clear_link(client, roommates):
     client.force_login(roommates["viewer"])
 
-    response = client.get("/roommates/", {"budget": BudgetRange.OVER_4000})
+    response = client.get("/roommates/", {"budget": BudgetRange.OVER_3000})
 
     assert response.status_code == 200
     assert b"No matches found" in response.content

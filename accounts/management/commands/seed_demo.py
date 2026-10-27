@@ -25,12 +25,12 @@ LOCATIONS = [
 
 # (email, display name, bio, location, budget, pets)
 SEEKERS = [
-    ("alex@roomiematch.test", "Alex", "Grad student, early riser.", "Manhattan", BudgetRange.B2501_3000, PetsPreference.NO_PETS),
-    ("sam@roomiematch.test", "Sam", "Works nights, very tidy.", "Brooklyn", BudgetRange.B2001_2500, PetsPreference.PET_FRIENDLY),
-    ("jordan@roomiematch.test", "Jordan", "Quiet, likes to cook.", "Brooklyn", BudgetRange.B2501_3000, PetsPreference.NO_PREFERENCE),
-    ("taylor@roomiematch.test", "Taylor", "Undergrad looking near campus.", "Manhattan", BudgetRange.B3001_3500, PetsPreference.NO_PETS),
-    ("casey@roomiematch.test", "Casey", "Has a cat.", "Queens", BudgetRange.B1501_2000, PetsPreference.PET_FRIENDLY),
-    ("riley@roomiematch.test", "Riley", "Flexible on location.", "Jersey City", BudgetRange.B2001_2500, PetsPreference.NO_PREFERENCE),
+    ("alex@roomiematch.test", "Alex", "Grad student, early riser.", "Manhattan", BudgetRange.B1501_2000, PetsPreference.NO_PETS),
+    ("sam@roomiematch.test", "Sam", "Works nights, very tidy.", "Brooklyn", BudgetRange.B1001_1500, PetsPreference.PET_FRIENDLY),
+    ("jordan@roomiematch.test", "Jordan", "Quiet, likes to cook.", "Brooklyn", BudgetRange.B1501_2000, PetsPreference.NO_PREFERENCE),
+    ("taylor@roomiematch.test", "Taylor", "Undergrad looking near campus.", "Manhattan", BudgetRange.B2001_2500, PetsPreference.NO_PETS),
+    ("casey@roomiematch.test", "Casey", "Has a cat.", "Queens", BudgetRange.B501_1000, PetsPreference.PET_FRIENDLY),
+    ("riley@roomiematch.test", "Riley", "Flexible on location.", "Jersey City", BudgetRange.B1001_1500, PetsPreference.NO_PREFERENCE),
 ]
 
 

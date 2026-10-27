@@ -5,13 +5,13 @@ from django.db.models.functions import Length, Trim
 
 
 class BudgetRange(models.TextChoices):
-    UNDER_1500 = "UNDER_1500", "Under $1,500"
+    UNDER_500 = "UNDER_500", "Under $500"
+    B501_1000 = "B501_1000", "$501-$1,000"
+    B1001_1500 = "B1001_1500", "$1,001-$1,500"
     B1501_2000 = "B1501_2000", "$1,501-$2,000"
     B2001_2500 = "B2001_2500", "$2,001-$2,500"
     B2501_3000 = "B2501_3000", "$2,501-$3,000"
-    B3001_3500 = "B3001_3500", "$3,001-$3,500"
-    B3501_4000 = "B3501_4000", "$3,501-$4,000"
-    OVER_4000 = "OVER_4000", "$4,001+"
+    OVER_3000 = "OVER_3000", "$3,001+"
 
 
 class PetsPreference(models.TextChoices):
