@@ -4,14 +4,16 @@ Update this file in the same PR that changes a story's status. Status is To do, 
 
 ## Sprint backlog (chosen stories)
 
-**Sprint goal:** Users can create a RoomieMatch account, log in, log out, and create user profile.
+**Sprint goal:** Users can create a RoomieMatch account, log in, log out, and search for roommates.
 
 | Story | Owner | Estimate | Status | Pull requests / commits | Acceptance criteria changed? (reason) |
 |---|---|---|---|---|---|
-| US-01 Registering an account | Kimberly | TBD | In progress | Registration feature fully implemented and pushed to branch; awaiting peer review | Yes: password requirements were specified, with specific validation messages; duplicate-email wording was clarified to `An account with this email already exists.`. |
-| US-02 Log in | Kimberly | TBD | In progress | Login feature fully implemented and pushed to branch; awaiting peer review | No known changes. |
-| US-03 Log out | Kimberly | TBD | In progress | Logout feature fully implemented and pushed to branch; awaiting peer review | No known changes. |
-| US-07 Search for potential roommates | Joyce | TBD | In progress | Implementing on branch `joyce`; PR link will be added when opened. | No known changes. |
+| US-01 Registering an account | Kimberly | 2 | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/1 | Yes: password requirements were specified, with specific validation messages; duplicate-email wording was clarified to `An account with this email already exists.`. |
+| US-02 Log in | Kimberly | 3 | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/1 | No changes. |
+| US-03 Log out | Kimberly | 1 | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/1 | No changes. |
+| US-07 Search for potential roommates | Joyce | TBD | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/2 | No changes. |
+| US-12 Filter roommate search results | Joyce | TBD | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/2 | No changes. |
+| US-13 Change password | Kimberly | 2 | Awaiting review | https://github.com/kimberlytsang/RoomieMatch/pull/3 | No changes. |
 
 These stories remain In progress until reviewed and merged, their acceptance criteria pass, tests pass, and they work in the deployed or localhost build.
 
@@ -27,8 +29,6 @@ These stories remain In progress until reviewed and merged, their acceptance cri
 | | US-09 Send a message | MVP | | |
 | | US-10 User session management | MVP | | |
 | | US-11 View conversations | MVP | | |
-| | US-12 Filter roommate search results | MVP | | |
-| | US-13 Change password | MVP | | |
 | | US-14 Delete account | MVP | | |
 | | US-15 Create and manage user profile | MVP | | |
 | | US-16 Create a group | Stretch | | |

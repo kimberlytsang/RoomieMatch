@@ -94,7 +94,8 @@ def test_register_weak_password_is_422(client, db, password):
 @pytest.mark.parametrize(("password", "message"), [
     ("Ab1!", "This password is too short. It must contain at least 8 characters."),
     ("lowercase123!", "Password must include at least one uppercase letter."),
-    ("Uppercase123", "Password must include at least one symbol."),
+    ("NoDigitPassword!", "Password must include at least one number."),
+    ("Uppercase123", "Password must include at least one special character."),
     ("A!" + "a" * 127, "Password must be at most 128 characters."),
 ])
 def test_register_returns_specific_password_requirement(client, db, password, message):

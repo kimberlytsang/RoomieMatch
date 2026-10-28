@@ -109,8 +109,6 @@ Every SQL statement ends with a semicolon. Without psql, you can use Django inst
 python -m pytest
 ```
 
-Tests use their own temporary database, so your demo data is not touched. Each completed story adds tests under `tests/` (see [CONTRIBUTING.md](CONTRIBUTING.md)).
-
 ## Demo data
 
 `python manage.py seed_demo` is safe to run repeatedly. It creates:
