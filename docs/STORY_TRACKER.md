@@ -12,6 +12,7 @@ Update this file in the same PR that changes a story's status. Status is To do, 
 | US-02 Log in | Kimberly | 3 | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/1 | No changes. |
 | US-03 Log out | Kimberly | 1 | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/1 | No changes. |
 | US-07 Search for potential roommates | Joyce | TBD | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/2 | No changes. |
+| US-08 View another user's profile | Joyce | TBD | In progress | Pending PR | No changes. |
 | US-12 Filter roommate search results | Joyce | TBD | Completed | https://github.com/kimberlytsang/RoomieMatch/pull/2 | No changes. |
 | US-13 Change password | Kimberly | 2 | Awaiting review | https://github.com/kimberlytsang/RoomieMatch/pull/3 | No changes. |
 
@@ -25,7 +26,6 @@ These stories remain In progress until reviewed and merged, their acceptance cri
 | | US-05 Location preference | MVP | | |
 | | US-06 Lifestyle preference | MVP | | |
 | | US-07 Search for potential roommates | MVP | | |
-| | US-08 View another user's profile | MVP | | |
 | | US-09 Send a message | MVP | | |
 | | US-10 User session management | MVP | | |
 | | US-11 View conversations | MVP | | |
