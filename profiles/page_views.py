@@ -1,10 +1,12 @@
 """HTML views for discovering roommate profiles."""
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.core.exceptions import ValidationError
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
 
 from . import services
-from .models import BudgetRange, Location, PetsPreference, Profile
+from .models import BudgetRange, Location, PetsPreference, Preference, Profile
 
 
 def _selected_filters(request):
@@ -52,3 +54,58 @@ def roommate_detail(request, user_id):
     except Profile.DoesNotExist:
         return render(request, "profiles/roommate_unavailable.html", status=404)
     return render(request, "profiles/roommate_detail.html", {"roommate": roommate})
+
+
+@login_required(login_url="login-page")
+def my_profile(request):
+    profile = Profile.objects.filter(user=request.user).first()
+    if profile is None:
+        return redirect("create-profile")
+    preference = Preference.objects.filter(
+        user=request.user
+    ).select_related("location").first()
+
+    return render(
+        request,
+        "profiles/my_profile.html",
+        {"profile": profile, "preference": preference},
+    )
+
+
+@login_required(login_url="login-page")
+@require_http_methods(["GET", "POST"])
+def create_profile(request):
+    if Profile.objects.filter(user=request.user).exists():
+        return redirect("my-profile")
+
+    values = {
+        "display_name": "",
+        "bio": "",
+        "location_id": "",
+        "budget_range": BudgetRange.B1001_1500,
+        "pets_preference": "",
+    }
+    errors = {}
+    if request.method == "POST":
+        values = {field: request.POST.get(field, "") for field in values}
+        try:
+            services.create_profile(request.user, **values)
+        except ValidationError as exc:
+            errors = exc.message_dict
+        except services.ProfileAlreadyExists:
+            return redirect("my-profile")
+        else:
+            return redirect("my-profile")
+
+    return render(
+        request,
+        "profiles/create_profile.html",
+        {
+            "values": values,
+            "errors": errors,
+            "locations": Location.objects.order_by("city", "state"),
+            "budget_ranges": BudgetRange.choices,
+            "pets_preferences": PetsPreference.choices,
+        },
+        status=400 if errors else 200,
+    )
