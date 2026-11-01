@@ -9,4 +9,5 @@ urlpatterns = [
     path("auth/login", views.login_view, name="auth-login"),  # US-02
     path("auth/logout", views.logout_view, name="auth-logout"),  # US-03
     path("auth/password/change", views.change_password, name="auth-password-change"),
+    path("users/me", views.delete_account, name="user-delete"),
 ]

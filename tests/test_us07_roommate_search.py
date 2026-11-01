@@ -131,7 +131,11 @@ def test_search_preserves_name_and_selected_filter_values(client, location):
     )
 
     assert response.status_code == 200
-    assert b'<input id="name" name="name" type="search" value="Ali">' in response.content
+    assert (
+        b'<input id="name" name="name" type="search" '
+        b'placeholder="Search roommates by name..." value="Ali">'
+        in response.content
+    )
     assert (
         f'<option value="{location.location_id}" selected>'.encode()
         in response.content

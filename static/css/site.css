@@ -307,6 +307,22 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .password-form-message.is-error { color: #a3332d; }
 .account-settings-side { grid-column: 2; grid-row: 1; padding-top: 3px; }
 .account-settings-email, .account-settings-inactivity { margin: 0 0 12px; color: #806d66; font-size: 12px; overflow-wrap: anywhere; }
+.account-settings-page .delete-account-card { padding: 20px; border: 1px solid #e8b6aa; border-radius: 7px; background: rgba(255, 253, 251, .78); }
+.account-settings-page .delete-account-card p { margin-bottom: 16px; color: #806d66; }
+.button-danger { display: inline-flex; min-height: 42px; justify-content: center; align-items: center; padding: 0 18px; border: 1px solid #b94339; border-radius: 5px; color: #fff; background: #b94339; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.button-danger:hover, .button-danger:focus-visible { border-color: #96352d; background: #96352d; }
+.button-danger:focus-visible, .button-secondary:focus-visible { outline: 2px solid var(--coral-hover); outline-offset: 3px; }
+.button-danger:disabled { cursor: wait; opacity: .68; }
+.delete-account-modal { width: min(100% - 32px, 480px); padding: 0; border: 0; border-radius: 9px; color: #3f231a; background: var(--paper); box-shadow: 0 24px 70px rgba(9, 10, 20, .3); }
+.delete-account-modal::backdrop { background: rgba(32, 33, 54, .62); }
+.delete-account-modal-content { padding: 32px; }
+.delete-account-modal-content h2 { margin: 0 0 10px; font-size: 25px; }
+.delete-account-modal-content p { color: #806d66; font-size: 14px; }
+.delete-account-modal-content .delete-account-warning { margin-bottom: 8px; color: #b94339; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.delete-account-modal-content .delete-account-error { margin: 0 0 16px; color: #a3332d; }
+.delete-account-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.button-secondary { min-height: 42px; padding: 0 18px; border: 1px solid #d5b9af; border-radius: 5px; color: #3f231a; background: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.button-secondary:hover { background: #fff1ec; }
 .roommate-heading { max-width: 610px; margin-bottom: 38px; }
 .roommate-heading h1, .roommate-detail-card h1 { margin-bottom: 10px; font-size: clamp(38px, 5vw, 58px); font-weight: 700; line-height: 1; }
 .roommate-heading > p:last-child { margin-bottom: 0; color: #806d66; font-size: 14px; }
@@ -423,6 +439,9 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
   .roommate-facts { grid-template-columns: 1fr; }
   .account-settings-layout { grid-template-columns: 1fr; }
   .account-settings-card { padding: 20px; }
+  .delete-account-modal-content { padding: 24px; }
+  .delete-account-modal-actions { flex-direction: column-reverse; }
+  .delete-account-modal-actions button { width: 100%; }
 }
 
 @media (max-height: 640px) and (min-width: 901px) {
