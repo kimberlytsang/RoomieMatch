@@ -4,7 +4,7 @@ from .models import BudgetRange, PetsPreference, Profile
 
 
 def list_available_roommates(
-    viewer, *, location_id=None, budget_range=None, pets_preference=None
+    viewer, *, location_id=None, budget_range=None, pets_preference=None, name=""
 ):
     """Return profiles a signed-in seeker can browse.
 
@@ -22,6 +22,8 @@ def list_available_roommates(
         roommates = roommates.filter(user__preference__budget_range=budget_range)
     if pets_preference in PetsPreference.values:
         roommates = roommates.filter(user__preference__pets_preference=pets_preference)
+    if name.strip():
+        roommates = roommates.filter(display_name__icontains=name.strip())
     return roommates.order_by("display_name")
 
 
