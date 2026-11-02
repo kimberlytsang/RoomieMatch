@@ -13,10 +13,12 @@ def _selected_filters(request):
     location_id = int(raw_location_id) if raw_location_id.isdigit() else None
     budget_range = request.GET.get("budget", "")
     pets_preference = request.GET.get("pets", "")
+    name = request.GET.get("name", "")
     return {
         "location": location_id,
         "budget": budget_range if budget_range in BudgetRange.values else "",
         "pets": pets_preference if pets_preference in PetsPreference.values else "",
+        "name": name,
     }
 
 
@@ -29,6 +31,7 @@ def roommate_list(request):
         location_id=selected_filters["location"],
         budget_range=selected_filters["budget"],
         pets_preference=selected_filters["pets"],
+        name=selected_filters["name"],
     )
     return render(
         request,
@@ -39,7 +42,14 @@ def roommate_list(request):
             "budget_ranges": BudgetRange.choices,
             "pets_preferences": PetsPreference.choices,
             "selected_filters": selected_filters,
-            "filters_active": any(selected_filters.values()),
+            "filters_active": any(
+                (
+                    selected_filters["location"],
+                    selected_filters["budget"],
+                    selected_filters["pets"],
+                    selected_filters["name"].strip(),
+                )
+            ),
         },
     )
 

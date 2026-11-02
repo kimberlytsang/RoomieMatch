@@ -7,10 +7,14 @@
   <section class="roommate-heading">
     <p class="eyebrow">Find a roommate</p>
     <h1>Find a roommate</h1>
-    <p>Choose a location, budget, and pet preference to narrow your search.</p>
+    <p>Search by name or choose a location, budget, and pet preference to narrow your results.</p>
   </section>
 
   <form class="roommate-filters" method="get" aria-label="Filter roommates">
+    <div class="filter-field">
+      <label for="name">Search by name</label>
+      <input id="name" name="name" type="search" placeholder="Search roommates by name..." value="{{ selected_filters.name }}">
+    </div>
     <div class="filter-field">
       <label for="location">Location</label>
       <select id="location" name="location">
