@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
 
-from .models import User
+from .models import User,SupportRequest
 
 MAX_PASSWORD_LENGTH = 128
 
@@ -90,3 +90,8 @@ def change_password(user, current_password, new_password):
     _validate_password(new_password, user=user)
     user.set_password(new_password)
     user.save(update_fields=["password"])
+
+
+def submit_support_request(user,subject,body):
+    """US-18: Create the support request entry in the db. Not going to worry about duplicates for now."""
+    SupportRequest.objects.create(user=user, subject=subject, body=body)

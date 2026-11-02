@@ -66,3 +66,11 @@ class Session(models.Model):
     class Meta:
         db_table = "sessions"
         indexes = [models.Index(fields=["expires_at"])]
+
+class SupportRequest(models.Model):
+    subject = models.CharField(max_length=100)
+    body = models.CharField(max_length=1000)
+    user = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.subject

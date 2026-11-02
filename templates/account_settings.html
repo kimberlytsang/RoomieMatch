@@ -34,6 +34,21 @@
         <p class="password-form-message" id="password-form-message" role="status" aria-live="polite"></p>
       </form>
     </section>
+    <section class="account-settings-card support-settings-card" aria-labelledby="support-heading">
+      <h2 id="support-heading">Contact support</h2>
+      <form id="support-request-form" class="support-settings-form">
+        <div class="field-group">
+          <label for="support-subject">Subject</label>
+          <input id="support-subject" name="subject" type="text" maxlength="200" placeholder="What do you need help with?" required>
+        </div>
+        <div class="field-group">
+          <label for="support-body">Message</label>
+          <textarea id="support-body" name="body" rows="6" maxlength="5000" placeholder="Describe your issue or question in detail" required></textarea>
+        </div>
+        <button class="button-primary" type="submit">Send request</button>
+        <p class="support-form-message" id="support-form-message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
 
   </div>
 </main>
@@ -62,6 +77,35 @@
     } catch (error) {
       passwordFormMessage.textContent = "Could not change your password. Please check your connection and try again.";
       passwordFormMessage.classList.add("is-error");
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+
+  const supportRequestForm = document.getElementById("support-request-form");
+  const supportFormMessage = document.getElementById("support-form-message");
+
+  supportRequestForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = supportRequestForm.querySelector('button[type="submit"]');
+    const formData = new FormData(supportRequestForm);
+    const payload = Object.fromEntries(formData.entries());
+    supportFormMessage.textContent = "";
+    supportFormMessage.classList.remove("is-error");
+    submitButton.disabled = true;
+
+    try {
+      const response = await postJson("/api/auth/support", payload);
+      if (response.status === 201) {
+        supportRequestForm.reset();
+        supportFormMessage.textContent = response.data.message;
+      } else {
+        supportFormMessage.textContent = response.data?.error || "Could not send your request. Please try again.";
+        supportFormMessage.classList.add("is-error");
+      }
+    } catch (error) {
+      supportFormMessage.textContent = "Could not send your request. Please check your connection and try again.";
+      supportFormMessage.classList.add("is-error");
     } finally {
       submitButton.disabled = false;
     }
