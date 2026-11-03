@@ -90,3 +90,9 @@ def change_password(user, current_password, new_password):
     _validate_password(new_password, user=user)
     user.set_password(new_password)
     user.save(update_fields=["password"])
+
+
+def delete_account(user):
+    """US-14: permanently delete a user and their cascading related records."""
+    with transaction.atomic():
+        user.delete()
