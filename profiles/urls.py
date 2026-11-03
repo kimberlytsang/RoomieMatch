@@ -1,2 +1,8 @@
-"""Routes for this component. Endpoints are added as each story is built."""
-urlpatterns = []
+"""JSON API routes for the profiles component."""
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path("profiles/me", views.profile_me, name="profile-me"),
+]

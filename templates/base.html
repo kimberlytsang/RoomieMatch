@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20261027-8">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20261030-us15-actions-1">
   <script>
     // Shared helper: POST JSON to the API with the CSRF token. Returns {status, data}.
     // The CSRF token is read from the cookie at the moment of the request, not from the
@@ -53,6 +53,7 @@
               <span class="account-menu-caret" aria-hidden="true">&#9662;</span>
             </button>
             <div class="account-menu-panel" id="account-menu" hidden>
+              <a href="{% url 'my-profile' %}">My profile</a>
               <a href="{% url 'account-settings' %}">Account settings</a>
               <button type="button" data-logout>Log out</button>
             </div>

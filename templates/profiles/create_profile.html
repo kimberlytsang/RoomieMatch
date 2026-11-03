@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create your profile - RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page create-profile-page">
+  <header class="roommate-heading create-profile-heading">
+    <p class="eyebrow">Tell us about yourself</p>
+    <h1>Create your profile</h1>
+    <p>Tell other roommates about yourself.</p>
+  </header>
+
+  <form class="create-profile-form" method="post" action="{% url 'create-profile' %}">
+    {% csrf_token %}
+    {% if errors %}
+      <div class="form-message" role="alert">
+        <p>Please check the following:</p>
+        <ul>
+          {% for field, messages in errors.items %}
+            {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <section class="create-profile-section" aria-labelledby="about-you-title">
+      <div class="create-profile-section-heading">
+        <h2 id="about-you-title">About you</h2>
+        <p>Fill in all fields marked *.</p>
+      </div>
+      <div class="create-profile-identity">
+        <button class="create-profile-photo" type="button" disabled aria-label="Profile photo upload coming soon" aria-describedby="photo-hint">
+          <img src="{% static 'images/male_homepage_image.jpg' %}" alt="Example photo" width="96" height="96">
+        </button>
+        <div class="create-profile-name field-group">
+          <label for="display-name">Name *</label>
+          <input id="display-name" name="display_name" type="text" value="{{ values.display_name }}" maxlength="50" autocomplete="name" placeholder="Your name" required>
+          <p class="field-hint" id="photo-hint">Profile photo upload is coming soon. This example photo is not saved to your profile.</p>
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="bio">About me</label>
+        <textarea id="bio" name="bio" rows="4" maxlength="500" placeholder="Tell us a little about yourself." aria-describedby="bio-hint">{{ values.bio }}</textarea>
+        <p class="field-hint" id="bio-hint">Optional. Up to 500 characters.</p>
+      </div>
+      <div class="field-group">
+        <label for="location">Location *</label>
+        <select id="location" name="location_id" required>
+          <option value="">Choose a location</option>
+          {% for location in locations %}
+            <option value="{{ location.pk }}" {% if values.location_id == location.pk|stringformat:"s" %}selected{% endif %}>{{ location }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </section>
+
+    <div class="create-profile-budget field-group">
+      <label id="budget-label" for="budget-range">Monthly budget *</label>
+      <select id="budget-range" name="budget_range" required>
+        {% for value, label in budget_ranges %}
+          <option value="{{ value }}" {% if values.budget_range == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <div id="budget-slider-control" hidden>
+        <div class="create-profile-budget-summary">
+          <output id="budget-value" for="budget-slider"></output>
+          <span>per month</span>
+        </div>
+        <input id="budget-slider" type="range" min="0" max="6" step="1" value="0" list="budget-ticks" aria-labelledby="budget-label">
+        <datalist id="budget-ticks">
+          {% for value, label in budget_ranges %}
+            <option value="{{ forloop.counter0 }}" label="{{ label }}"></option>
+          {% endfor %}
+        </datalist>
+        <div class="create-profile-budget-limits">
+          <span id="budget-minimum"></span>
+          <span id="budget-maximum"></span>
+        </div>
+      </div>
+    </div>
+
+    <section class="create-profile-section" aria-labelledby="preferences-title">
+      <div class="create-profile-section-heading">
+        <h2 id="preferences-title">Home preferences</h2>
+        <p>Tell us what you want at home.</p>
+      </div>
+      <div class="create-profile-preferences">
+        <fieldset class="create-profile-choice-group" disabled aria-describedby="sleep-hint">
+          <legend>Sleep time</legend>
+          <p id="sleep-hint">Coming soon. This preference is not saved.</p>
+          <div class="create-profile-options">
+            <label><input type="radio" name="sleep_preview" value="early"><span>Sleep early</span></label>
+            <label><input type="radio" name="sleep_preview" value="late"><span>Sleep late</span></label>
+            <label><input type="radio" name="sleep_preview" value="varies"><span>Sleep time varies</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="create-profile-choice-group" aria-describedby="pets-hint">
+          <legend>Pets *</legend>
+          <p id="pets-hint">Whether you want pets at home.</p>
+          <div class="create-profile-options">
+            {% for value, label in pets_preferences %}
+              <label>
+                <input type="radio" name="pets_preference" value="{{ value }}" {% if values.pets_preference == value %}checked{% endif %} required>
+                <span>{{ label }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+        <fieldset class="create-profile-choice-group" disabled aria-describedby="parties-hint">
+          <legend>Parties</legend>
+          <p id="parties-hint">Coming soon. This preference is not saved.</p>
+          <div class="create-profile-options">
+            <label><input type="radio" name="parties_preview" value="never"><span>No parties</span></label>
+            <label><input type="radio" name="parties_preview" value="sometimes"><span>Parties sometimes</span></label>
+            <label><input type="radio" name="parties_preview" value="often"><span>Parties often</span></label>
+          </div>
+        </fieldset>
+      </div>
+    </section>
+
+    <section class="create-profile-visibility" aria-labelledby="visibility-title">
+      <h2 id="visibility-title">What others see</h2>
+      <p>Your name, location, budget, pet preference, and what you write about yourself.</p>
+      <p>Others cannot see your email or password.</p>
+    </section>
+    <div><button class="button-primary create-profile-submit" type="submit">Create profile</button></div>
+  </form>
+</main>
+<script>
+  (() => {
+    const name = document.getElementById("display-name");
+    const validateName = () => name.setCustomValidity(name.value.trim() ? "" : "Enter your name.");
+    name.addEventListener("input", validateName);
+    validateName();
+
+    const select = document.getElementById("budget-range");
+    const slider = document.getElementById("budget-slider");
+    const options = Array.from(select.options);
+    if (!options.length) return;
+
+    slider.max = String(options.length - 1);
+    slider.value = String(Math.max(0, select.selectedIndex));
+    const updateBudget = () => {
+      const index = Number(slider.value);
+      const label = options[index].textContent.trim();
+      select.value = options[index].value;
+      document.getElementById("budget-value").textContent = label;
+      slider.setAttribute("aria-valuetext", label);
+      slider.style.setProperty("--budget-progress", `${index / Math.max(1, options.length - 1) * 100}%`);
+    };
+    slider.addEventListener("input", updateBudget);
+    updateBudget();
+    document.getElementById("budget-minimum").textContent = options[0].textContent.trim();
+    document.getElementById("budget-maximum").textContent = options[options.length - 1].textContent.trim();
+    document.getElementById("budget-label").htmlFor = "budget-slider";
+    select.hidden = true;
+    document.getElementById("budget-slider-control").hidden = false;
+  })();
+</script>
+{% endblock %}
