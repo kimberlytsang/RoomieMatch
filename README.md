@@ -6,10 +6,6 @@ CS-GY 6063, Section I2, Group "Software Engineering I I2 - 2". Instructor: Raz S
 
 **Stack (from the Sprint 2 design):** Python, Django (HTML templates + JSON endpoints), PostgreSQL. Runs on localhost; AWS is optional for Sprint 3.
 
-## Current status
-
-Track progress in [`docs/STORY_TRACKER.md`](docs/STORY_TRACKER.md).
-
 ## Run it locally
 
 You need Python 3.12+, Git, and PostgreSQL 14+ installed on your computer (the default setup).
@@ -38,7 +34,7 @@ If PowerShell blocks the script, run `Set-ExecutionPolicy -Scope CurrentUser Rem
 pip install -r requirements.txt
 ```
 
-**2. Create the database in PostgreSQL**
+**2. Option A: Create the database in PostgreSQL**
 
 Open `psql` (SQL Shell from the Start menu, or `psql -U postgres`), sign in as the `postgres` user, and run:
 
@@ -50,6 +46,14 @@ CREATE DATABASE roomiematch OWNER roomiematch;
 The user needs superuser rights because the first migration runs `CREATE EXTENSION citext`. If `roomiematch` already exists as a user, skip the first line.
 
 *Prefer to use your own `postgres` user?* Run only `CREATE DATABASE roomiematch;` and set `DATABASE_URL` in `.env` (step 3) to `postgres://postgres:YOURPASSWORD@localhost:5432/roomiematch`.
+
+*Option B: PostgreSQL in Docker (alternative).* If you have Docker installed and would rather not install PostgreSQL, run this from the project folder instead:
+
+```bash
+docker compose up -d db
+```
+
+This starts a PostgreSQL 16 container with the database, user and password from step 2 already created (`roomiematch` / `roomiematch`), so you can skip the SQL above and go to step 3. Stop it with `docker compose down` (your data is kept) or `docker compose down -v` (deletes the data). If you use this option, make sure no local PostgreSQL service is using port 5432.
 
 **3. Configure environment variables**
 
