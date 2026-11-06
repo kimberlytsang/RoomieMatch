@@ -47,7 +47,8 @@ def test_new_user_can_open_form_and_profile_entry(signed_in, user, details):
     assert b"Create your profile" in response.content
     assert b"Brooklyn, NY" in response.content
     assert b"csrfmiddlewaretoken" in response.content
-    assert b"Profile photo upload is coming soon" in response.content
+    assert b'enctype="multipart/form-data"' in response.content
+    assert b'name="profile_picture" type="file"' in response.content
     assert b"This preference is not saved" in response.content
     assert not Profile.objects.filter(user=user).exists()
     assert signed_in.get(reverse("my-profile")).url == reverse("create-profile")

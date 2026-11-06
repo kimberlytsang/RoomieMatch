@@ -11,7 +11,7 @@
     <p>Tell other roommates about yourself.</p>
   </header>
 
-  <form class="create-profile-form" method="post" action="{% url 'create-profile' %}">
+  <form class="create-profile-form" method="post" action="{% url 'create-profile' %}" enctype="multipart/form-data">
     {% csrf_token %}
     {% if errors %}
       <div class="form-message" role="alert">
@@ -30,14 +30,18 @@
         <p>Fill in all fields marked *.</p>
       </div>
       <div class="create-profile-identity">
-        <button class="create-profile-photo" type="button" disabled aria-label="Profile photo upload coming soon" aria-describedby="photo-hint">
-          <img src="{% static 'images/male_homepage_image.jpg' %}" alt="Example photo" width="96" height="96">
-        </button>
+        <div class="create-profile-photo">
+          <img src="{% static 'images/male_homepage_image.jpg' %}" alt="Default profile photo" width="96" height="96">
+        </div>
         <div class="create-profile-name field-group">
           <label for="display-name">Name *</label>
           <input id="display-name" name="display_name" type="text" value="{{ values.display_name }}" maxlength="50" autocomplete="name" placeholder="Your name" required>
-          <p class="field-hint" id="photo-hint">Profile photo upload is coming soon. This example photo is not saved to your profile.</p>
         </div>
+      </div>
+      <div class="field-group">
+        <label for="profile-picture">Profile photo</label>
+        <input id="profile-picture" name="profile_picture" type="file" accept="image/jpeg,image/png" aria-describedby="photo-hint">
+        <p class="field-hint" id="photo-hint">Optional. JPEG or PNG, up to 2 MB. Your photo is visible to signed-in roommates.</p>
       </div>
       <div class="field-group">
         <label for="bio">About me</label>
