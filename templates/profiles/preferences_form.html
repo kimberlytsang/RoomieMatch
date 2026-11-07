@@ -1,0 +1,204 @@
+<details id="preferences-editor" class="my-profile-edit-form preferences-editor">
+  <summary>Edit preferences</summary>
+  <form id="preferences-form" method="post" action="{% url 'preferences-me' %}">
+    {% csrf_token %}
+    <fieldset id="preferences-fields" disabled>
+      <div class="field-group">
+        <label for="preference-location">Location</label>
+        <input id="preference-location" type="text" autocomplete="off" maxlength="152" aria-controls="preference-locations" aria-describedby="preference-location-hint" required>
+        <input id="preference-location-id" type="hidden">
+        <div id="preference-locations" class="preferences-location-suggestions" role="group" aria-label="Location suggestions"></div>
+        <p id="preference-location-hint" role="status">Type a city or neighborhood and choose a suggestion.</p>
+      </div>
+      <div class="field-group">
+        <label for="preference-budget-slider">Monthly budget</label>
+        <select id="preference-budget" hidden disabled>
+          {% for value, label in budget_ranges %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <output id="preference-budget-value" for="preference-budget-slider"></output>
+        <input id="preference-budget-slider" type="range" min="0" max="6" step="1" list="preference-budget-ticks">
+        <datalist id="preference-budget-ticks">
+          {% for value, label in budget_ranges %}
+            <option value="{{ forloop.counter0 }}" label="{{ label }}"></option>
+          {% endfor %}
+        </datalist>
+      </div>
+      <div class="field-group">
+        <label for="preference-pets">Pets</label>
+        <select id="preference-pets" required>
+          <option value="">Choose a pet preference</option>
+          {% for value, label in pets_preferences %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="my-profile-actions">
+        <button class="button-primary" type="submit">Save preferences</button>
+        <button class="my-profile-secondary" id="cancel-preferences" type="button">Cancel</button>
+      </div>
+    </fieldset>
+    <p id="preferences-message" class="form-message" role="alert"></p>
+  </form>
+</details>
+<script>
+  (() => {
+    const editor = document.getElementById("preferences-editor");
+    const form = document.getElementById("preferences-form");
+    const fields = document.getElementById("preferences-fields");
+    const message = document.getElementById("preferences-message");
+    const locationInput = document.getElementById("preference-location");
+    const locationId = document.getElementById("preference-location-id");
+    const locations = document.getElementById("preference-locations");
+    const locationHint = document.getElementById("preference-location-hint");
+    const budget = document.getElementById("preference-budget");
+    const slider = document.getElementById("preference-budget-slider");
+    const budgetOptions = Array.from(budget.options);
+    const pets = document.getElementById("preference-pets");
+    let suggestions = [];
+    let loadRequestId = 0;
+
+    const updateBudget = () => {
+      const option = budgetOptions[Number(slider.value)];
+      budget.value = option.value;
+      document.getElementById("preference-budget-value").textContent = option.textContent;
+      slider.setAttribute("aria-valuetext", option.textContent);
+    };
+    slider.addEventListener("input", updateBudget);
+
+    const selectLocation = () => {
+      const match = suggestions.find(
+        (location) => location.label.toLowerCase() === locationInput.value.trim().toLowerCase()
+      );
+      locationId.value = match ? match.id : "";
+      locationInput.setCustomValidity(match ? "" : "Choose a valid location from the suggestions.");
+      return Boolean(match);
+    };
+
+    locationInput.addEventListener("input", async () => {
+      // Clear the previous ID immediately, including while suggestions are loading.
+      locationId.value = "";
+      if (selectLocation()) {
+        locations.replaceChildren();
+        locationHint.textContent = "Location selected.";
+        return;
+      }
+      const text = locationInput.value.trim();
+      suggestions = [];
+      locations.replaceChildren();
+      locationHint.textContent = "Type a city or neighborhood and choose a suggestion.";
+      if (!text) return;
+      try {
+        const query = text.split(",")[0].trim();
+        const response = await fetch("{% url 'locations' %}?q=" + encodeURIComponent(query));
+        if (!response.ok) throw new Error();
+        const matches = await response.json();
+        if (locationInput.value.trim() !== text) return;
+        suggestions = matches.map(location => ({
+          id: location.location_id, label: location.city + ", " + location.state,
+        }));
+        locations.replaceChildren();
+        if (selectLocation()) {
+          locationHint.textContent = "Location selected.";
+          return;
+        }
+        for (const location of suggestions) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "my-profile-secondary";
+          button.textContent = location.label;
+          button.addEventListener("click", () => {
+            locationInput.value = location.label;
+            selectLocation();
+            locations.replaceChildren();
+            locationHint.textContent = "Location selected.";
+            locationInput.focus();
+          });
+          locations.append(button);
+        }
+        locationHint.textContent = matches.length
+          ? "Choose a matching location from the suggestions."
+          : "No matching locations. Try another city or neighborhood.";
+      } catch (error) {
+        if (locationInput.value.trim() === text) {
+          locationHint.textContent = "Could not load locations. Please try typing again.";
+        }
+      }
+    });
+
+    async function preferencesRequest(method, body) {
+      const response = await fetch("{% url 'preferences-me' %}", {
+        method,
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok && response.status !== 404) {
+        throw new Error(data.error || "Could not save preferences. Please try again.");
+      }
+      return { status: response.status, data };
+    }
+
+    editor.addEventListener("toggle", async () => {
+      const requestId = ++loadRequestId;
+      fields.disabled = true;
+      if (!editor.open) return;
+      message.textContent = "";
+      try {
+        const response = await preferencesRequest("GET");
+        if (requestId !== loadRequestId || !editor.open) return;
+        const saved = response.status === 404 ? {} : response.data;
+        locationInput.value = saved.location_name || "";
+        locationId.value = saved.location_id || "";
+        locationInput.setCustomValidity("");
+        locations.replaceChildren();
+        suggestions = saved.location_id
+          ? [{ id: saved.location_id, label: saved.location_name }] : [];
+        locationHint.textContent = "Type a city or neighborhood and choose a suggestion.";
+        budget.value = saved.budget_range || budgetOptions[0].value;
+        slider.value = String(budget.selectedIndex);
+        updateBudget();
+        pets.value = saved.pets_preference || "";
+        fields.disabled = false;
+      } catch (error) {
+        if (requestId !== loadRequestId || !editor.open) return;
+        message.textContent = error.message || "Could not load preferences. Please try again.";
+      }
+    });
+
+    document.getElementById("cancel-preferences").addEventListener("click", () => {
+      loadRequestId++;
+      fields.disabled = true;
+      editor.open = false;
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!selectLocation()) {
+        locationInput.reportValidity();
+        return;
+      }
+      loadRequestId++;
+      fields.disabled = true;
+      message.textContent = "";
+      try {
+        const response = await preferencesRequest("PUT", {
+          location_id: locationId.value,
+          budget_range: budget.value,
+          pets_preference: pets.value,
+        });
+        if (response.status === 200) {
+          window.location.reload();
+          return;
+        }
+        message.textContent = response.data.error || "Could not save preferences. Please try again.";
+      } catch (error) {
+        message.textContent = error.message || "Could not save preferences. Please try again.";
+      } finally {
+        fields.disabled = false;
+      }
+    });
+  })();
+</script>

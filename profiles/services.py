@@ -60,19 +60,11 @@ def create_profile(user, *, display_name, bio, location_id, budget_range, pets_p
     elif len(bio) > 500:
         errors["bio"] = "About me must be at most 500 characters."
     try:
-        location_id = int(location_id)
-    except (TypeError, ValueError):
-        location_id = 0
-    location = (
-        Location.objects.filter(pk=location_id).first()
-        if 0 < location_id <= 2147483647 else None
-    )
-    if location is None:
-        errors["location_id"] = "Choose a valid location."
-    if budget_range not in BudgetRange.values:
-        errors["budget_range"] = "Choose a valid monthly budget."
-    if pets_preference not in PetsPreference.values:
-        errors["pets_preference"] = "Choose a pet preference."
+        preferences = _clean_preferences(
+            location_id=location_id, budget_range=budget_range, pets_preference=pets_preference,
+        )
+    except ValidationError as exc:
+        errors.update(exc.message_dict)
     if errors:
         raise ValidationError(errors)
 
@@ -83,11 +75,7 @@ def create_profile(user, *, display_name, bio, location_id, budget_range, pets_p
             raise ProfileAlreadyExists
         Preference.objects.update_or_create(
             user=user,
-            defaults={
-                "location": location,
-                "budget_range": budget_range,
-                "pets_preference": pets_preference,
-            },
+            defaults=preferences,
         )
         return Profile.objects.create(user=user, display_name=display_name, bio=bio)
 
@@ -160,3 +148,56 @@ def delete_profile(user):
         get_user_model().objects.select_for_update().get(pk=user.pk)
         profile = get_profile(user)
         profile.delete()
+
+
+def _clean_preferences(*, location_id, budget_range, pets_preference):
+    """Validate the same three fields for profile creation and preference edits."""
+    errors = {}
+    if isinstance(location_id, bool) or not isinstance(location_id, (int, str)):
+        location_id = 0
+    try:
+        location_id = int(location_id)
+    except (TypeError, ValueError):
+        location_id = 0
+    location = (
+        Location.objects.filter(pk=location_id).first()
+        if 0 < location_id <= 2147483647 else None
+    )
+    if location is None:
+        errors["location_id"] = "Choose a valid location."
+    if budget_range not in BudgetRange.values:
+        errors["budget_range"] = "Choose a valid monthly budget."
+    if pets_preference not in PetsPreference.values:
+        errors["pets_preference"] = "Choose a pet preference."
+    if errors:
+        raise ValidationError(errors)
+    return {
+        "location": location,
+        "budget_range": budget_range,
+        "pets_preference": pets_preference,
+    }
+
+
+def get_preferences(user):
+    return Preference.objects.select_related("location").get(user=user)
+
+
+def save_preferences(user, values):
+    """Create or replace the current user's preferences without changing their profile."""
+    fields = {"location_id", "budget_range", "pets_preference"}
+    if not isinstance(values, dict) or set(values) - fields:
+        raise ValidationError("Only location, budget and pet preference can be saved.")
+    cleaned = _clean_preferences(**{field: values.get(field, "") for field in fields})
+    with transaction.atomic():
+        get_user_model().objects.select_for_update().get(pk=user.pk)
+        preference, _ = Preference.objects.update_or_create(user=user, defaults=cleaned)
+        return preference
+
+
+def search_locations(query):
+    query = query.strip()
+    if len(query) > 100 or "\x00" in query:
+        raise ValidationError("Enter a valid location name of at most 100 characters.")
+    if not query:
+        return Location.objects.none()
+    return Location.objects.filter(city__icontains=query).order_by("city", "state")[:20]

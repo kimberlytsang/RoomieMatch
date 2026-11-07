@@ -78,7 +78,12 @@ def my_profile(request):
     return render(
         request,
         "profiles/my_profile.html",
-        {"profile": profile, "preference": preference},
+        {
+            "profile": profile,
+            "preference": preference,
+            "budget_ranges": BudgetRange.choices,
+            "pets_preferences": PetsPreference.choices,
+        },
     )
 
 
