@@ -1,5 +1,10 @@
 """Business rules and database queries for roommate discovery."""
 
+from io import BytesIO
+import warnings
+
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -44,7 +49,45 @@ class ProfileAlreadyExists(Exception):
     pass
 
 
-def create_profile(user, *, display_name, bio, location_id, budget_range, pets_preference):
+def _clean_profile_picture(upload):
+    """Return verified JPEG/PNG bytes, or None when no file was selected."""
+    if upload is None:
+        return None
+    limit = 2 * 1024 * 1024
+    if upload.size > limit:
+        raise ValidationError({"profile_picture": "Profile photo must be 2 MB or smaller."})
+    data = upload.read(limit + 1)
+    if len(data) > limit:
+        raise ValidationError({"profile_picture": "Profile photo must be 2 MB or smaller."})
+    if not data:
+        raise ValidationError({"profile_picture": "Choose a non-empty image file."})
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(BytesIO(data), formats=("JPEG", "PNG")) as picture:
+                image_format = picture.format
+                picture.verify()
+            # Reopen to decode the pixels too; verify alone misses truncated JPEGs.
+            with Image.open(BytesIO(data), formats=("JPEG", "PNG")) as picture:
+                picture.load()
+        extensions, content_type = {
+            "JPEG": ({"jpg", "jpeg"}, "image/jpeg"),
+            "PNG": ({"png"}, "image/png"),
+        }[image_format]
+        if (upload.name.rsplit(".", 1)[-1].lower() not in extensions
+                or upload.content_type != content_type):
+            raise ValueError("Image format does not match its filename or type.")
+    except (OSError, ValueError, SyntaxError, Image.DecompressionBombError,
+            Image.DecompressionBombWarning):
+        raise ValidationError({"profile_picture": "Choose a valid JPEG or PNG image."})
+    return data
+
+
+def create_profile(
+    user, *, display_name, bio, location_id, budget_range, pets_preference,
+    profile_picture=None,
+):
     """US-15: validate and create a profile and its preferences together."""
     display_name = display_name.strip()
     bio = bio.strip()
@@ -76,6 +119,8 @@ def create_profile(user, *, display_name, bio, location_id, budget_range, pets_p
     if errors:
         raise ValidationError(errors)
 
+    picture = _clean_profile_picture(profile_picture)
+
     with transaction.atomic():
         # Lock the owner so repeated submissions cannot create two profiles.
         get_user_model().objects.select_for_update().get(pk=user.pk)
@@ -89,7 +134,9 @@ def create_profile(user, *, display_name, bio, location_id, budget_range, pets_p
                 "pets_preference": pets_preference,
             },
         )
-        return Profile.objects.create(user=user, display_name=display_name, bio=bio)
+        return Profile.objects.create(
+            user=user, display_name=display_name, bio=bio, profile_picture=picture,
+        )
 
 
 def _clean_profile_text(values):
@@ -130,8 +177,8 @@ def get_profile(user):
     return Profile.objects.get(user=user)
 
 
-def update_profile(user, changes):
-    """Update only the supplied name and bio fields."""
+def update_profile(user, changes, *, profile_picture=None):
+    """Update the supplied name, bio and optional uploaded photo together."""
     if not isinstance(changes, dict):
         raise ValidationError("Profile changes must be an object.")
 
@@ -142,6 +189,9 @@ def update_profile(user, changes):
         raise ValidationError("Provide a name or about me to update.")
 
     cleaned = _clean_profile_text(changes)
+    picture = _clean_profile_picture(profile_picture)
+    if picture is not None:
+        cleaned["profile_picture"] = picture
 
     with transaction.atomic():
         get_user_model().objects.select_for_update().get(pk=user.pk)

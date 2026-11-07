@@ -67,6 +67,7 @@ def roommate_detail(request, user_id):
 
 
 @login_required(login_url="login-page")
+@require_http_methods(["GET", "POST"])
 def my_profile(request):
     profile = Profile.objects.filter(user=request.user).first()
     if profile is None:
@@ -75,10 +76,26 @@ def my_profile(request):
         user=request.user
     ).select_related("location").first()
 
+    values = {"display_name": profile.display_name, "bio": profile.bio}
+    errors = {}
+    if request.method == "POST":
+        values = {field: request.POST.get(field, "") for field in values}
+        try:
+            services.update_profile(
+                request.user, values, profile_picture=request.FILES.get("profile_picture"),
+            )
+        except ValidationError as exc:
+            errors = exc.message_dict
+        except Profile.DoesNotExist:
+            return redirect("create-profile")
+        else:
+            return redirect("my-profile")
+
     return render(
         request,
         "profiles/my_profile.html",
-        {"profile": profile, "preference": preference},
+        {"profile": profile, "preference": preference, "values": values, "errors": errors},
+        status=400 if errors else 200,
     )
 
 
@@ -99,7 +116,9 @@ def create_profile(request):
     if request.method == "POST":
         values = {field: request.POST.get(field, "") for field in values}
         try:
-            services.create_profile(request.user, **values)
+            services.create_profile(
+                request.user, **values, profile_picture=request.FILES.get("profile_picture"),
+            )
         except ValidationError as exc:
             errors = exc.message_dict
         except services.ProfileAlreadyExists:

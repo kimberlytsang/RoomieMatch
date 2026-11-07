@@ -2,7 +2,7 @@
 Business rules live in services.py, not here."""
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods
 
 from config.api import BadRequest, authenticated_only, error, json_body
 
@@ -13,7 +13,7 @@ from .models import Profile
 @require_http_methods(["GET", "POST", "PATCH", "DELETE"])
 @authenticated_only
 def profile_me(request):
-    """Manage the signed-in user's profile. Photo uploads are not supported yet."""
+    """Manage profile text through JSON; page forms handle photo uploads."""
     try:
         if request.method == "GET":
             profile = services.get_profile(request.user)
@@ -52,3 +52,23 @@ def profile_me(request):
         },
         status=201 if request.method == "POST" else 200,
     )
+
+
+@require_GET
+@authenticated_only
+def profile_photo(request, user_id):
+    """Read your own photo or a browseable roommate's photo (also for US-08)."""
+    try:
+        if user_id == request.user.pk:
+            profile = services.get_profile(request.user)
+        else:
+            profile = services.get_available_roommate(request.user, user_id)
+    except Profile.DoesNotExist:
+        return error(404, "Profile photo not found.")
+    if not profile.profile_picture:
+        return error(404, "Profile photo not found.")
+    picture = bytes(profile.profile_picture)
+    content_type = "image/png" if picture.startswith(b"\x89PNG\r\n\x1a\n") else "image/jpeg"
+    response = HttpResponse(picture, content_type=content_type)
+    response["Cache-Control"] = "private, no-store"
+    return response
