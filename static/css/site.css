@@ -583,3 +583,14 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 
 .create-profile-page .field-group input[type="file"], .my-profile-edit-form input[type="file"] { height: auto; max-width: 100%; font-size: 14px; line-height: 24px; }
 .my-profile-edit-form .field-hint { margin-top: 8px; color: #806252; font-size: 14px; line-height: 24px; }
+
+.preferences-editor { margin: 24px 0; }
+.preferences-editor summary { width: fit-content; color: #391400; cursor: pointer; font-weight: 700; }
+.preferences-editor form { margin-top: 20px; }
+.preferences-editor select { width: 100%; padding: 10px 12px; border: 1px solid #f3d1bf; border-radius: 6px; color: #391400; background: #fff; font: inherit; }
+.preferences-editor input[type="range"] { padding: 0; border: 0; accent-color: var(--coral); }
+.preferences-editor #preference-location-hint { margin-top: 8px; font-size: 14px; }
+.preferences-editor select:focus-visible, .preferences-editor summary:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
+
+.preferences-location-suggestions { display: grid; gap: 6px; margin-top: 8px; }
+.preferences-location-suggestions:empty { display: none; }

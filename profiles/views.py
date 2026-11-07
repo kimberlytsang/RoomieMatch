@@ -7,7 +7,42 @@ from django.views.decorators.http import require_GET, require_http_methods
 from config.api import BadRequest, authenticated_only, error, json_body
 
 from . import services
-from .models import Profile
+from .models import Preference, Profile
+
+
+@require_http_methods(["GET", "PUT"])
+@authenticated_only
+def preferences_me(request):
+    try:
+        if request.method == "GET":
+            preference = services.get_preferences(request.user)
+        else:
+            preference = services.save_preferences(request.user, json_body(request))
+    except BadRequest as exc:
+        return error(400, str(exc))
+    except ValidationError as exc:
+        return error(400, " ".join(exc.messages))
+    except Preference.DoesNotExist:
+        return error(404, "Preferences not set.")
+
+    response = JsonResponse({
+        "location_id": preference.location_id,
+        "location_name": str(preference.location),
+        "budget_range": preference.budget_range,
+        "pets_preference": preference.pets_preference,
+    })
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@require_http_methods(["GET"])
+@authenticated_only
+def locations(request):
+    try:
+        matches = services.search_locations(request.GET.get("q", ""))
+    except ValidationError as exc:
+        return error(400, " ".join(exc.messages))
+    return JsonResponse(list(matches.values("location_id", "city", "state")), safe=False)
 
 
 @require_http_methods(["GET", "POST", "PATCH", "DELETE"])

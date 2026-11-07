@@ -94,7 +94,14 @@ def my_profile(request):
     return render(
         request,
         "profiles/my_profile.html",
-        {"profile": profile, "preference": preference, "values": values, "errors": errors},
+        {
+            "profile": profile,
+            "preference": preference,
+            "values": values,
+            "errors": errors,
+            "budget_ranges": BudgetRange.choices,
+            "pets_preferences": PetsPreference.choices,
+        },
         status=400 if errors else 200,
     )
 
