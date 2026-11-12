@@ -4,11 +4,26 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from .models import BudgetRange, Location, PetsPreference, Preference, Profile
+from .models import (
+    BudgetRange,
+    Location,
+    PartyPreference,
+    PetsPreference,
+    Preference,
+    Profile,
+    SleepPreference,
+)
 
 
 def list_available_roommates(
-    viewer, *, location_id=None, budget_range=None, pets_preference=None, name=""
+    viewer,
+    *,
+    location_id=None,
+    budget_range=None,
+    pets_preference=None,
+    sleep_preference=None,
+    party_preference=None,
+    name="",
 ):
     """Return profiles a signed-in seeker can browse.
 
@@ -26,6 +41,10 @@ def list_available_roommates(
         roommates = roommates.filter(user__preference__budget_range=budget_range)
     if pets_preference in PetsPreference.values:
         roommates = roommates.filter(user__preference__pets_preference=pets_preference)
+    if sleep_preference in SleepPreference.values:
+        roommates = roommates.filter(user__preference__sleep_preference=sleep_preference)
+    if party_preference in PartyPreference.values:
+        roommates = roommates.filter(user__preference__party_preference=party_preference)
     if name.strip():
         roommates = roommates.filter(display_name__icontains=name.strip())
     return roommates.order_by("display_name")

@@ -17,7 +17,7 @@ class BudgetRange(models.TextChoices):
 class PetsPreference(models.TextChoices):
     PET_FRIENDLY = "PET_FRIENDLY", "Pet friendly"
     NO_PETS = "NO_PETS", "No pets"
-    NO_PREFERENCE = "NO_PREFERENCE", "No preference"
+    NO_PREFERENCE = "NO_PREFERENCE", "No preference with pets"
 
 
 class SleepPreference(models.TextChoices):

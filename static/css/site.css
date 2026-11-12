@@ -352,7 +352,8 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .roommate-location { margin-bottom: 12px; color: #df5c50; font-size: 12px; font-weight: 700; }
 .roommate-budget { margin-bottom: 12px; font-size: 12px; font-weight: 700; }
 .roommate-bio { min-height: 42px; margin-bottom: 14px; color: #77747e; font-size: 12px; line-height: 1.55; }
-.preference-chip { display: inline-flex; margin: 0 0 15px; padding: 5px 10px; border: 1px solid #eaded9; border-radius: 3px; color: #5e5964; font-size: 11px; }
+.preference-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 15px; }
+.preference-chip { display: inline-flex; margin: 0; padding: 5px 10px; border: 1px solid #eaded9; border-radius: 3px; color: #5e5964; font-size: 11px; }
 .roommate-profile-link { display: flex; min-height: 38px; justify-content: center; align-items: center; border: 1px solid var(--coral); border-radius: 3px; color: #c94f45; font-size: 12px; font-weight: 700; text-decoration: none; }
 .roommate-profile-link:hover, .roommate-profile-link:focus-visible { color: #fff; background: var(--coral); }
 .empty-roommates { max-width: 620px; margin: 80px auto; padding: 42px 28px; border: 1px dashed #eabfb1; border-radius: 7px; text-align: center; }
