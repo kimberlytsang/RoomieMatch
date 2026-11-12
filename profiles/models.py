@@ -21,14 +21,14 @@ class PetsPreference(models.TextChoices):
 
 
 class SleepPreference(models.TextChoices):
-    NO_PREFERENCE = "NO_PREFERENCE", "No preference"
+    NO_PREFERENCE = "NO_PREFERENCE", "No preference with sleep"
     EARLY = "EARLY", "Sleep early"
     LATE = "LATE", "Sleep late"
     VARIES = "VARIES", "Sleep time varies"
 
 
 class PartyPreference(models.TextChoices):
-    NO_PREFERENCE = "NO_PREFERENCE", "No preference"
+    NO_PREFERENCE = "NO_PREFERENCE", "No preference with parties"
     NO_PARTIES = "NO_PARTIES", "No parties"
     SOMETIMES = "SOMETIMES", "Parties sometimes"
     OFTEN = "OFTEN", "Parties often"

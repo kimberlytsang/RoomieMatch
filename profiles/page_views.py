@@ -57,8 +57,16 @@ def roommate_list(request):
             "locations": Location.objects.order_by("city", "state"),
             "budget_ranges": BudgetRange.choices,
             "pets_preferences": PetsPreference.choices,
-            "sleep_preferences": SleepPreference.choices,
-            "party_preferences": PartyPreference.choices,
+            # Sleep and party "no preference" values are defaults until profile
+            # management supports choosing them, so do not offer them as filters.
+            "sleep_preferences": [
+                choice for choice in SleepPreference.choices
+                if choice[0] != SleepPreference.NO_PREFERENCE
+            ],
+            "party_preferences": [
+                choice for choice in PartyPreference.choices
+                if choice[0] != PartyPreference.NO_PREFERENCE
+            ],
             "selected_filters": selected_filters,
             "filters_active": any(
                 (

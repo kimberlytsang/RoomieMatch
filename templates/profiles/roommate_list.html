@@ -87,9 +87,9 @@
               <p class="roommate-budget">{{ roommate.user.preference.get_budget_range_display }} / month</p>
               <p class="roommate-bio">{{ roommate.bio|default:"This roommate has not added an introduction yet." }}</p>
               <div class="preference-chips" aria-label="Home preferences">
-                <p class="preference-chip">Sleep: {{ roommate.user.preference.get_sleep_preference_display }}</p>
-                <p class="preference-chip">Pets: {{ roommate.user.preference.get_pets_preference_display }}</p>
-                <p class="preference-chip">Parties: {{ roommate.user.preference.get_party_preference_display }}</p>
+                <p class="preference-chip">{{ roommate.user.preference.get_sleep_preference_display }}</p>
+                <p class="preference-chip">{{ roommate.user.preference.get_pets_preference_display }}</p>
+                <p class="preference-chip">{{ roommate.user.preference.get_party_preference_display }}</p>
               </div>
               <a class="roommate-profile-link" href="{% url 'roommate-detail' roommate.user_id %}">View profile</a>
             </div>

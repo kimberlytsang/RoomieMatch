@@ -115,9 +115,10 @@ def test_sleep_and_party_filters_are_applied_separately(client, roommates):
     assert response.status_code == 200
     assert b"Maya" in response.content
     assert b"Sam" not in response.content
-    assert b"Sleep: Sleep early" in response.content
-    assert b"Pets: No pets" in response.content
-    assert b"Parties: No parties" in response.content
+    assert b"Sleep early" in response.content
+    assert b"No pets" in response.content
+    assert b"No parties" in response.content
+    assert b"Sleep: Sleep early" not in response.content
 
 
 def test_pet_no_preference_label_is_specific_to_pets(client, roommates):
@@ -127,3 +128,13 @@ def test_pet_no_preference_label_is_specific_to_pets(client, roommates):
 
     assert response.status_code == 200
     assert b"No preference with pets" in response.content
+
+
+def test_sleep_and_party_no_preference_values_are_not_filter_options(client, roommates):
+    client.force_login(roommates["viewer"])
+
+    response = client.get("/roommates/")
+
+    assert response.status_code == 200
+    assert b"No preference with sleep" not in response.content
+    assert b"No preference with parties" not in response.content
