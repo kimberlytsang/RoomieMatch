@@ -17,6 +17,13 @@ from .models import (
 )
 
 
+PROFILE_PETS_CHOICES = [
+    (PetsPreference.NO_PREFERENCE, PetsPreference.NO_PREFERENCE.label),
+    (PetsPreference.PET_FRIENDLY, PetsPreference.PET_FRIENDLY.label),
+    (PetsPreference.NO_PETS, PetsPreference.NO_PETS.label),
+]
+
+
 def _selected_filters(request):
     """Return validated GET filters and ignore malformed query parameters."""
     raw_location_id = request.GET.get("location", "")
@@ -127,7 +134,7 @@ def my_profile(request):
             "values": values,
             "errors": errors,
             "budget_ranges": BudgetRange.choices,
-            "pets_preferences": PetsPreference.choices,
+            "pets_preferences": PROFILE_PETS_CHOICES,
             "sleep_preferences": SleepPreference.choices,
             "party_preferences": PartyPreference.choices,
         },
@@ -174,7 +181,7 @@ def create_profile(request):
             "errors": errors,
             "location_name": request.POST.get("location_name", ""),
             "budget_ranges": BudgetRange.choices,
-            "pets_preferences": PetsPreference.choices,
+            "pets_preferences": PROFILE_PETS_CHOICES,
             "sleep_preferences": SleepPreference.choices,
             "party_preferences": PartyPreference.choices,
         },

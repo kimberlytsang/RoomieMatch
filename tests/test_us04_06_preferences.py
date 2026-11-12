@@ -141,7 +141,9 @@ def test_page_and_new_login_read_saved_choices(signed_in, user, profile, locatio
         assert page.status_code == 200
         assert page.context["preference"].budget_range == changed["budget_range"]
         assert list(page.context["budget_ranges"]) == list(BudgetRange.choices)
-        assert list(page.context["pets_preferences"]) == list(PetsPreference.choices)
+        assert [value for value, _ in page.context["pets_preferences"]] == [
+            PetsPreference.NO_PREFERENCE, PetsPreference.PET_FRIENDLY, PetsPreference.NO_PETS,
+        ]
         assert list(page.context["sleep_preferences"]) == list(SleepPreference.choices)
         assert list(page.context["party_preferences"]) == list(PartyPreference.choices)
         assert b"<dd>Sleep late</dd>" in page.content
