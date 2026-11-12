@@ -3,27 +3,27 @@
   <form id="preferences-form" method="post" action="{% url 'preferences-me' %}">
     {% csrf_token %}
     <fieldset id="preferences-fields" disabled>
-      <div class="field-group">
+      <div class="field-group" data-location-autocomplete data-locations-url="{% url 'locations' %}">
         <label for="preference-location">Location</label>
-        <input id="preference-location" type="text" autocomplete="off" maxlength="152" aria-controls="preference-locations" aria-describedby="preference-location-hint" required>
-        <input id="preference-location-id" type="hidden">
-        <div id="preference-locations" class="preferences-location-suggestions" role="group" aria-label="Location suggestions"></div>
-        <p id="preference-location-hint" role="status">Type a city or neighborhood and choose a suggestion.</p>
+        <input id="preference-location" type="text" autocomplete="off" maxlength="152" aria-controls="preference-locations" aria-describedby="preference-location-hint" data-location-input required>
+        <input id="preference-location-id" type="hidden" data-location-id>
+        <div id="preference-locations" class="location-suggestions" role="group" aria-label="Location suggestions" data-location-suggestions></div>
+        <p id="preference-location-hint" role="status" data-location-hint>Type a city or neighborhood and choose a suggestion.</p>
       </div>
-      <div class="field-group">
+      <div class="field-group budget-control">
         <label for="preference-budget-slider">Monthly budget</label>
         <select id="preference-budget" hidden disabled>
           {% for value, label in budget_ranges %}
             <option value="{{ value }}">{{ label }}</option>
           {% endfor %}
         </select>
-        <output id="preference-budget-value" for="preference-budget-slider"></output>
-        <input id="preference-budget-slider" type="range" min="0" max="6" step="1" list="preference-budget-ticks">
-        <datalist id="preference-budget-ticks">
+        <div class="budget-summary">Selected range: <output id="preference-budget-value" for="preference-budget-slider"></output><span>per month</span></div>
+        <input id="preference-budget-slider" type="range" min="0" max="6" step="1">
+        <div class="budget-options" role="group" aria-label="Choose one monthly budget range">
           {% for value, label in budget_ranges %}
-            <option value="{{ forloop.counter0 }}" label="{{ label }}"></option>
+            <button type="button" data-budget-option aria-pressed="false">{{ label }}</button>
           {% endfor %}
-        </datalist>
+        </div>
       </div>
       <div class="field-group">
         <label for="preference-pets">Pets</label>
@@ -50,82 +50,14 @@
     const message = document.getElementById("preferences-message");
     const locationInput = document.getElementById("preference-location");
     const locationId = document.getElementById("preference-location-id");
-    const locations = document.getElementById("preference-locations");
-    const locationHint = document.getElementById("preference-location-hint");
     const budget = document.getElementById("preference-budget");
     const slider = document.getElementById("preference-budget-slider");
     const budgetOptions = Array.from(budget.options);
     const pets = document.getElementById("preference-pets");
-    let suggestions = [];
     let loadRequestId = 0;
 
-    const updateBudget = () => {
-      const option = budgetOptions[Number(slider.value)];
-      budget.value = option.value;
-      document.getElementById("preference-budget-value").textContent = option.textContent;
-      slider.setAttribute("aria-valuetext", option.textContent);
-    };
-    slider.addEventListener("input", updateBudget);
-
-    const selectLocation = () => {
-      const match = suggestions.find(
-        (location) => location.label.toLowerCase() === locationInput.value.trim().toLowerCase()
-      );
-      locationId.value = match ? match.id : "";
-      locationInput.setCustomValidity(match ? "" : "Choose a valid location from the suggestions.");
-      return Boolean(match);
-    };
-
-    locationInput.addEventListener("input", async () => {
-      // Clear the previous ID immediately, including while suggestions are loading.
-      locationId.value = "";
-      if (selectLocation()) {
-        locations.replaceChildren();
-        locationHint.textContent = "Location selected.";
-        return;
-      }
-      const text = locationInput.value.trim();
-      suggestions = [];
-      locations.replaceChildren();
-      locationHint.textContent = "Type a city or neighborhood and choose a suggestion.";
-      if (!text) return;
-      try {
-        const query = text.split(",")[0].trim();
-        const response = await fetch("{% url 'locations' %}?q=" + encodeURIComponent(query));
-        if (!response.ok) throw new Error();
-        const matches = await response.json();
-        if (locationInput.value.trim() !== text) return;
-        suggestions = matches.map(location => ({
-          id: location.location_id, label: location.city + ", " + location.state,
-        }));
-        locations.replaceChildren();
-        if (selectLocation()) {
-          locationHint.textContent = "Location selected.";
-          return;
-        }
-        for (const location of suggestions) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "my-profile-secondary";
-          button.textContent = location.label;
-          button.addEventListener("click", () => {
-            locationInput.value = location.label;
-            selectLocation();
-            locations.replaceChildren();
-            locationHint.textContent = "Location selected.";
-            locationInput.focus();
-          });
-          locations.append(button);
-        }
-        locationHint.textContent = matches.length
-          ? "Choose a matching location from the suggestions."
-          : "No matching locations. Try another city or neighborhood.";
-      } catch (error) {
-        if (locationInput.value.trim() === text) {
-          locationHint.textContent = "Could not load locations. Please try typing again.";
-        }
-      }
-    });
+    const updateBudget = setupBudgetSlider(form.querySelector(".budget-control"));
+    const setLocation = setupLocationAutocomplete(form.querySelector("[data-location-autocomplete]"));
 
     async function preferencesRequest(method, body) {
       const response = await fetch("{% url 'preferences-me' %}", {
@@ -150,13 +82,7 @@
         const response = await preferencesRequest("GET");
         if (requestId !== loadRequestId || !editor.open) return;
         const saved = response.status === 404 ? {} : response.data;
-        locationInput.value = saved.location_name || "";
-        locationId.value = saved.location_id || "";
-        locationInput.setCustomValidity("");
-        locations.replaceChildren();
-        suggestions = saved.location_id
-          ? [{ id: saved.location_id, label: saved.location_name }] : [];
-        locationHint.textContent = "Type a city or neighborhood and choose a suggestion.";
+        setLocation(saved.location_id, saved.location_name);
         budget.value = saved.budget_range || budgetOptions[0].value;
         slider.value = String(budget.selectedIndex);
         updateBudget();
@@ -176,7 +102,7 @@
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (!selectLocation()) {
+      if (!locationId.value) {
         locationInput.reportValidity();
         return;
       }

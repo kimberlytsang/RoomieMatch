@@ -73,11 +73,13 @@ def test_create_saves_and_displays_real_photo(signed_in, user, details, image_fo
     assert photo["X-Content-Type-Options"] == "nosniff"
 
 
-def test_no_photo_uses_default(signed_in, user, details):
-    services.create_profile(user, **details)
+@pytest.mark.parametrize("name, initial", [("avery", "A"), ("Zoe", "Z"), ("张三", "张")])
+def test_no_photo_uses_name_initial(signed_in, user, details, name, initial):
+    services.create_profile(user, **{**details, "display_name": name})
     page = signed_in.get(reverse("my-profile"))
-    assert b'images/male_homepage_image.jpg' in page.content
-    assert b'alt="Default profile photo"' in page.content
+    assert b'images/male_homepage_image.jpg' not in page.content
+    assert f'aria-label="Default profile photo">{initial}</span>'.encode() in page.content
+    assert b"Edit picture" in page.content
     assert signed_in.get(reverse("profile-photo", args=[user.pk])).status_code == 404
 
 

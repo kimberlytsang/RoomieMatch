@@ -4,20 +4,18 @@
 {% block title %}My Profile - RoomieMatch{% endblock %}
 
 {% block content %}
+<script src="{% static 'js/profile_forms.js' %}?v=20261112-1"></script>
 <main class="page-wrap roommate-page my-profile-page">
   <p class="my-profile-breadcrumb">My profile</p>
 
   <div class="my-profile-layout">
     <div class="my-profile-portrait">
-      <div class="my-profile-photo">
-        {% if profile.profile_picture %}
-          <img src="{% url 'profile-photo' profile.user_id %}" alt="{{ profile.display_name }}'s profile photo" width="470" height="440">
-        {% else %}
-          <img src="{% static 'images/male_homepage_image.jpg' %}" alt="Default profile photo" width="470" height="440">
-        {% endif %}
+      <div class="my-profile-photo roommate-avatar">
+        <img {% if profile.profile_picture %}src="{% url 'profile-photo' profile.user_id %}"{% else %}hidden{% endif %} alt="{{ profile.display_name }}'s profile photo" width="470" height="440">
+        <span data-photo-initial role="img" aria-label="Default profile photo"{% if profile.profile_picture %} hidden{% endif %}>{{ profile.display_name|first|upper }}</span>
       </div>
-      <button class="my-profile-photo-button" type="button" data-edit-profile aria-controls="profile-edit-form" aria-expanded="false" disabled>
-        Edit profile
+      <button class="my-profile-photo-button" type="button" data-edit-profile data-edit-picture aria-controls="profile-edit-form" aria-expanded="false" disabled>
+        Edit picture
       </button>
     </div>
 
@@ -128,6 +126,7 @@
       nameInput.setCustomValidity(nameInput.value.trim() ? "" : "Enter your name.");
     };
     nameInput.addEventListener("input", validateName);
+    setupPhotoPreview(editForm, document.querySelector(".my-profile-photo"), nameInput);
 
     const setEditing = (editing) => {
       editForm.hidden = !editing;
@@ -147,7 +146,8 @@
         editError.textContent = "";
         validateName();
         setEditing(true);
-        nameInput.focus();
+        if (button.hasAttribute("data-edit-picture")) document.getElementById("profile-picture").focus();
+        else nameInput.focus();
       });
     });
 

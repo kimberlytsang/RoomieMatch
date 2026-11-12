@@ -139,7 +139,7 @@ def create_profile(request):
         {
             "values": values,
             "errors": errors,
-            "locations": Location.objects.order_by("city", "state"),
+            "location_name": request.POST.get("location_name", ""),
             "budget_ranges": BudgetRange.choices,
             "pets_preferences": PetsPreference.choices,
         },

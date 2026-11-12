@@ -4,6 +4,7 @@
 {% block title %}Create your profile - RoomieMatch{% endblock %}
 
 {% block content %}
+<script src="{% static 'js/profile_forms.js' %}?v=20261112-1"></script>
 <main class="page-wrap roommate-page create-profile-page">
   <header class="roommate-heading create-profile-heading">
     <p class="eyebrow">Tell us about yourself</p>
@@ -30,8 +31,9 @@
         <p>Fill in all fields marked *.</p>
       </div>
       <div class="create-profile-identity">
-        <div class="create-profile-photo">
-          <img src="{% static 'images/male_homepage_image.jpg' %}" alt="Default profile photo" width="96" height="96">
+        <div class="create-profile-photo roommate-avatar">
+          <img alt="Profile photo preview" width="96" height="96" hidden>
+          <span data-photo-initial role="img" aria-label="Default profile photo">{{ values.display_name|first|upper|default:"?" }}</span>
         </div>
         <div class="create-profile-name field-group">
           <label for="display-name">Name *</label>
@@ -48,39 +50,28 @@
         <textarea id="bio" name="bio" rows="4" maxlength="500" placeholder="Tell us a little about yourself." aria-describedby="bio-hint">{{ values.bio }}</textarea>
         <p class="field-hint" id="bio-hint">Optional. Up to 500 characters.</p>
       </div>
-      <div class="field-group">
+      <div class="field-group" data-location-autocomplete data-locations-url="{% url 'locations' %}">
         <label for="location">Location *</label>
-        <select id="location" name="location_id" required>
-          <option value="">Choose a location</option>
-          {% for location in locations %}
-            <option value="{{ location.pk }}" {% if values.location_id == location.pk|stringformat:"s" %}selected{% endif %}>{{ location }}</option>
-          {% endfor %}
-        </select>
+        <input id="location" name="location_name" type="text" value="{{ location_name }}" autocomplete="off" maxlength="152" aria-controls="location-suggestions" aria-describedby="location-hint" data-location-input required>
+        <input id="location-id" name="location_id" type="hidden" value="{{ values.location_id }}" data-location-id>
+        <div id="location-suggestions" class="location-suggestions" role="group" aria-label="Location suggestions" data-location-suggestions></div>
+        <p id="location-hint" class="field-hint" role="status" data-location-hint>Type a city or neighborhood and choose a suggestion.</p>
       </div>
     </section>
 
-    <div class="create-profile-budget field-group">
-      <label id="budget-label" for="budget-range">Monthly budget *</label>
+    <div class="create-profile-budget field-group budget-control">
+      <label id="budget-label" for="budget-slider">Monthly budget *</label>
       <select id="budget-range" name="budget_range" required>
         {% for value, label in budget_ranges %}
           <option value="{{ value }}" {% if values.budget_range == value %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
-      <div id="budget-slider-control" hidden>
-        <div class="create-profile-budget-summary">
-          <output id="budget-value" for="budget-slider"></output>
-          <span>per month</span>
-        </div>
-        <input id="budget-slider" type="range" min="0" max="6" step="1" value="0" list="budget-ticks" aria-labelledby="budget-label">
-        <datalist id="budget-ticks">
-          {% for value, label in budget_ranges %}
-            <option value="{{ forloop.counter0 }}" label="{{ label }}"></option>
-          {% endfor %}
-        </datalist>
-        <div class="create-profile-budget-limits">
-          <span id="budget-minimum"></span>
-          <span id="budget-maximum"></span>
-        </div>
+      <div class="budget-summary">Selected range: <output id="budget-value" for="budget-slider"></output><span>per month</span></div>
+      <input id="budget-slider" type="range" min="0" max="6" step="1" aria-labelledby="budget-label">
+      <div class="budget-options" role="group" aria-label="Choose one monthly budget range">
+        {% for value, label in budget_ranges %}
+          <button type="button" data-budget-option aria-pressed="false">{{ label }}</button>
+        {% endfor %}
       </div>
     </div>
 
@@ -138,28 +129,10 @@
     name.addEventListener("input", validateName);
     validateName();
 
-    const select = document.getElementById("budget-range");
-    const slider = document.getElementById("budget-slider");
-    const options = Array.from(select.options);
-    if (!options.length) return;
-
-    slider.max = String(options.length - 1);
-    slider.value = String(Math.max(0, select.selectedIndex));
-    const updateBudget = () => {
-      const index = Number(slider.value);
-      const label = options[index].textContent.trim();
-      select.value = options[index].value;
-      document.getElementById("budget-value").textContent = label;
-      slider.setAttribute("aria-valuetext", label);
-      slider.style.setProperty("--budget-progress", `${index / Math.max(1, options.length - 1) * 100}%`);
-    };
-    slider.addEventListener("input", updateBudget);
-    updateBudget();
-    document.getElementById("budget-minimum").textContent = options[0].textContent.trim();
-    document.getElementById("budget-maximum").textContent = options[options.length - 1].textContent.trim();
-    document.getElementById("budget-label").htmlFor = "budget-slider";
-    select.hidden = true;
-    document.getElementById("budget-slider-control").hidden = false;
+    setupBudgetSlider(document.querySelector(".budget-control"));
+    setupLocationAutocomplete(document.querySelector("[data-location-autocomplete]"));
+    setupPhotoPreview(document.querySelector(".create-profile-form"), document.querySelector(".create-profile-photo"), name);
+    name.dispatchEvent(new Event("input"));
   })();
 </script>
 {% endblock %}
