@@ -6,7 +6,15 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
 from . import services
-from .models import BudgetRange, Location, PetsPreference, Preference, Profile
+from .models import (
+    BudgetRange,
+    Location,
+    PartyPreference,
+    PetsPreference,
+    Preference,
+    Profile,
+    SleepPreference,
+)
 
 
 def _selected_filters(request):
@@ -15,11 +23,15 @@ def _selected_filters(request):
     location_id = int(raw_location_id) if raw_location_id.isdigit() else None
     budget_range = request.GET.get("budget", "")
     pets_preference = request.GET.get("pets", "")
+    sleep_preference = request.GET.get("sleep", "")
+    party_preference = request.GET.get("parties", "")
     name = request.GET.get("name", "")
     return {
         "location": location_id,
         "budget": budget_range if budget_range in BudgetRange.values else "",
         "pets": pets_preference if pets_preference in PetsPreference.values else "",
+        "sleep": sleep_preference if sleep_preference in SleepPreference.values else "",
+        "parties": party_preference if party_preference in PartyPreference.values else "",
         "name": name,
     }
 
@@ -33,6 +45,8 @@ def roommate_list(request):
         location_id=selected_filters["location"],
         budget_range=selected_filters["budget"],
         pets_preference=selected_filters["pets"],
+        sleep_preference=selected_filters["sleep"],
+        party_preference=selected_filters["parties"],
         name=selected_filters["name"],
     )
     return render(
@@ -43,12 +57,24 @@ def roommate_list(request):
             "locations": Location.objects.order_by("city", "state"),
             "budget_ranges": BudgetRange.choices,
             "pets_preferences": PetsPreference.choices,
+            # Sleep and party "no preference" values are defaults until profile
+            # management supports choosing them, so do not offer them as filters.
+            "sleep_preferences": [
+                choice for choice in SleepPreference.choices
+                if choice[0] != SleepPreference.NO_PREFERENCE
+            ],
+            "party_preferences": [
+                choice for choice in PartyPreference.choices
+                if choice[0] != PartyPreference.NO_PREFERENCE
+            ],
             "selected_filters": selected_filters,
             "filters_active": any(
                 (
                     selected_filters["location"],
                     selected_filters["budget"],
                     selected_filters["pets"],
+                    selected_filters["sleep"],
+                    selected_filters["parties"],
                     selected_filters["name"].strip(),
                 )
             ),
