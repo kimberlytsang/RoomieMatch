@@ -109,6 +109,7 @@ def my_profile(request):
         try:
             services.update_profile(
                 request.user, values, profile_picture=request.FILES.get("profile_picture"),
+                remove_picture=request.POST.get("remove_picture") == "on",
             )
         except ValidationError as exc:
             errors = exc.message_dict

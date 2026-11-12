@@ -87,6 +87,7 @@ def test_no_photo_uses_name_initial(signed_in, user, details, name, initial):
     assert b'images/male_homepage_image.jpg' not in page.content
     assert f'aria-label="Default profile photo">{initial}</span>'.encode() in page.content
     assert b"Edit picture" in page.content
+    assert b'name="remove_picture"' not in page.content
     assert signed_in.get(reverse("profile-photo", args=[user.pk])).status_code == 404
 
 
@@ -332,3 +333,130 @@ def test_delete_removes_profile_from_search_but_keeps_account_and_preferences(si
     assert seeker.get(detail_url).status_code == 404
     assert seeker.get(photo_url).status_code == 404
     assert signed_in.get(reverse("my-profile")).url == reverse("create-profile")
+
+
+@pytest.mark.parametrize("image_format", ["PNG", "JPEG"])
+def test_remove_photo_preserves_profile_and_preferences_after_login(signed_in, user, details, image_format):
+    profile = services.create_profile(user, **details, profile_picture=photo_upload(image_format))
+    before = Preference.objects.filter(user=user).values().get()
+    photo_url = reverse("profile-photo", args=[user.pk])
+    assert signed_in.get(photo_url).status_code == 200
+    assert b'name="remove_picture"' in signed_in.get(reverse("my-profile")).content
+
+    response = signed_in.post(reverse("my-profile"), {
+        "display_name": profile.display_name, "bio": profile.bio, "remove_picture": "on",
+    })
+    assert response.status_code == 302
+    assert response.url == reverse("my-profile")
+    profile.refresh_from_db()
+    assert profile.profile_picture is None
+    assert profile.display_name == details["display_name"]
+    assert profile.bio == details["bio"]
+    assert Preference.objects.filter(user=user).values().get() == before
+    assert signed_in.get(photo_url).status_code == 404
+    page = signed_in.get(reverse("my-profile"))
+    assert b'aria-label="Default profile photo">A</span>' in page.content
+    assert b'name="remove_picture"' not in page.content
+
+    assert signed_in.post(reverse("auth-logout")).status_code == 204
+    new_session = Client()
+    assert new_session.post(reverse("auth-login"), {
+        "email": user.email, "password": "Correct-Horse-42",
+    }, content_type="application/json").status_code == 200
+    assert b'aria-label="Default profile photo">A</span>' in new_session.get(reverse("my-profile")).content
+    assert new_session.get(photo_url).status_code == 404
+    assert Profile.objects.get(user=user).profile_picture is None
+    assert Preference.objects.filter(user=user).values().get() == before
+
+    viewer = User.objects.create_user("removed-photo-viewer@example.com", "Correct-Horse-42")
+    new_session.force_login(viewer)
+    assert new_session.get(photo_url).status_code == 404
+    assert new_session.get(reverse("roommate-detail", args=[user.pk])).status_code == 200
+
+
+@pytest.mark.parametrize("valid_upload", [True, False])
+def test_remove_and_upload_together_do_not_save_partial_changes(signed_in, user, profile, valid_upload):
+    before = Profile.objects.filter(user=user).values().get()
+    before_preferences = Preference.objects.filter(user=user).values().get()
+    upload = photo_upload("JPEG") if valid_upload else SimpleUploadedFile(
+        "broken.png", b"not an image", content_type="image/png",
+    )
+    response = signed_in.post(reverse("my-profile"), {
+        "display_name": "Should not save", "bio": "Should not save",
+        "remove_picture": "on", "profile_picture": upload,
+    })
+    assert response.status_code == 400
+    assert "profile_picture" in response.context["errors"]
+    assert Profile.objects.filter(user=user).values().get() == before
+    assert Preference.objects.filter(user=user).values().get() == before_preferences
+
+
+@pytest.mark.parametrize("field, value", [("display_name", "   "), ("bio", "invalid\x00bio")])
+def test_invalid_text_does_not_remove_photo(signed_in, user, profile, field, value):
+    before = Profile.objects.filter(user=user).values().get()
+    before_preferences = Preference.objects.filter(user=user).values().get()
+    response = signed_in.post(reverse("my-profile"), {
+        "display_name": "Changed name", "bio": "Changed bio", "remove_picture": "on", field: value,
+    })
+    assert response.status_code == 400
+    assert field in response.context["errors"]
+    assert Profile.objects.filter(user=user).values().get() == before
+    assert Preference.objects.filter(user=user).values().get() == before_preferences
+
+
+def test_remove_photo_requires_login(client, user, profile):
+    response = client.post(reverse("my-profile"), {
+        "display_name": profile.display_name, "bio": profile.bio, "remove_picture": "on",
+    })
+    assert response.status_code == 302
+    assert response.url.startswith("/login/?next=")
+    profile.refresh_from_db()
+    assert bytes(profile.profile_picture) == image_bytes()
+
+
+def test_remove_photo_requires_csrf(user, profile):
+    client = Client(enforce_csrf_checks=True)
+    client.force_login(user)
+    values = {"display_name": profile.display_name, "bio": profile.bio, "remove_picture": "on"}
+    assert client.post(reverse("my-profile"), values).status_code == 403
+    profile.refresh_from_db()
+    assert bytes(profile.profile_picture) == image_bytes()
+    client.get(reverse("my-profile"))
+    response = client.post(reverse("my-profile"), {
+        **values, "csrfmiddlewaretoken": client.cookies["csrftoken"].value,
+    })
+    assert response.status_code == 302
+    profile.refresh_from_db()
+    assert profile.profile_picture is None
+
+
+def test_remove_photo_cannot_target_another_user(signed_in, user, profile, details):
+    other = User.objects.create_user("keep-avatar@example.com", "Correct-Horse-42")
+    services.create_profile(other, **details, profile_picture=photo_upload("JPEG"))
+    before = Profile.objects.filter(user=other).values().get()
+    before_preferences = Preference.objects.filter(user=other).values().get()
+    response = signed_in.post(reverse("my-profile"), {
+        "user_id": str(other.pk), "display_name": profile.display_name,
+        "bio": profile.bio, "remove_picture": "on",
+    })
+    assert response.status_code == 302
+    assert Profile.objects.get(user=user).profile_picture is None
+    assert Profile.objects.filter(user=other).values().get() == before
+    assert Preference.objects.filter(user=other).values().get() == before_preferences
+    assert signed_in.get(reverse("profile-photo", args=[other.pk])).content == image_bytes("JPEG")
+
+
+def test_remove_photo_when_already_empty_is_safe(signed_in, user, details):
+    profile = services.create_profile(user, **details)
+    response = signed_in.post(reverse("my-profile"), {
+        "display_name": profile.display_name, "bio": profile.bio, "remove_picture": "on",
+    })
+    assert response.status_code == 302
+    profile.refresh_from_db()
+    assert profile.profile_picture is None
+
+
+def test_get_request_cannot_remove_photo(signed_in, profile):
+    assert signed_in.get(reverse("my-profile"), {"remove_picture": "on"}).status_code == 200
+    profile.refresh_from_db()
+    assert bytes(profile.profile_picture) == image_bytes()

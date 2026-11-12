@@ -567,6 +567,7 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .my-profile-edit-form .field-group label { color: #391400; font-size: 14px; }
 .my-profile-edit-form input, .my-profile-edit-form textarea { display: block; width: 100%; padding: 10px 12px; border: 1px solid #f3d1bf; border-radius: 6px; color: #391400; background: #fff; font: inherit; font-size: 16px; }
 .my-profile-edit-form input { height: 44px; }
+.my-profile-edit-form input[type="checkbox"] { display: inline-block; width: auto; height: auto; padding: 0; }
 .my-profile-edit-form textarea { min-height: 120px; resize: vertical; }
 .my-profile-page input:focus-visible, .my-profile-page textarea:focus-visible, .my-profile-page button:focus-visible { outline: 2px solid var(--coral); outline-offset: 3px; }
 .my-profile-actions { display: flex; flex-wrap: wrap; gap: 16px; }

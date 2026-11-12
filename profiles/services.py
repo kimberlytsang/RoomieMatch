@@ -190,8 +190,8 @@ def get_profile(user):
     return Profile.objects.get(user=user)
 
 
-def update_profile(user, changes, *, profile_picture=None):
-    """Update the supplied name, bio and optional uploaded photo together."""
+def update_profile(user, changes, *, profile_picture=None, remove_picture=False):
+    """Update profile text and upload or remove a photo together."""
     if not isinstance(changes, dict):
         raise ValidationError("Profile changes must be an object.")
 
@@ -202,8 +202,12 @@ def update_profile(user, changes, *, profile_picture=None):
         raise ValidationError("Provide a name or about me to update.")
 
     cleaned = _clean_profile_text(changes)
+    if remove_picture and profile_picture is not None:
+        raise ValidationError({"profile_picture": "Choose a new photo or Remove Photo, not both."})
     picture = _clean_profile_picture(profile_picture)
-    if picture is not None:
+    if remove_picture:
+        cleaned["profile_picture"] = None
+    elif picture is not None:
         cleaned["profile_picture"] = picture
 
     with transaction.atomic():

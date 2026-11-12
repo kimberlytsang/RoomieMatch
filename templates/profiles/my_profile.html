@@ -4,7 +4,7 @@
 {% block title %}My Profile - RoomieMatch{% endblock %}
 
 {% block content %}
-<script src="{% static 'js/profile_forms.js' %}?v=20261112-1"></script>
+<script src="{% static 'js/profile_forms.js' %}?v=20261112-remove-photo-1"></script>
 <main class="page-wrap roommate-page my-profile-page">
   <p class="my-profile-breadcrumb">My profile</p>
 
@@ -45,6 +45,15 @@
             <input id="profile-picture" name="profile_picture" type="file" accept="image/jpeg,image/png" aria-describedby="photo-hint">
             <p class="field-hint" id="photo-hint">JPEG or PNG, up to 2 MB. Leave empty to keep your current photo.</p>
           </div>
+          {% if profile.profile_picture %}
+            <div class="field-group">
+              <label for="remove-profile-picture">
+                <input id="remove-profile-picture" name="remove_picture" type="checkbox" aria-describedby="remove-photo-hint">
+                Remove Photo
+              </label>
+              <p class="field-hint" id="remove-photo-hint">Save Changes to remove your photo. Uncheck to upload a replacement.</p>
+            </div>
+          {% endif %}
           <div class="my-profile-actions">
             <button class="button-primary" type="submit">Save Changes</button>
             <button class="my-profile-secondary" id="cancel-profile-edit" type="button">Cancel</button>

@@ -83,6 +83,7 @@ function setupLocationAutocomplete(container) {
 
 function setupPhotoPreview(form, photo, nameInput) {
   const input = form.querySelector('input[name="profile_picture"]');
+  const remove = form.querySelector('input[name="remove_picture"]');
   const image = photo.querySelector("img");
   const initial = photo.querySelector("[data-photo-initial]");
   const savedSource = image.getAttribute("src");
@@ -99,10 +100,23 @@ function setupPhotoPreview(form, photo, nameInput) {
     input.setCustomValidity("");
   };
   const updateInitial = () => {
-    if (!savedSource && !previewUrl) initial.textContent = nameInput.value.trim().charAt(0).toUpperCase() || "?";
+    if (image.hidden) initial.textContent = nameInput.value.trim().charAt(0).toUpperCase() || "?";
   };
   nameInput.addEventListener("input", updateInitial);
-  form.addEventListener("reset", restorePhoto);
+  form.addEventListener("reset", () => {
+    input.disabled = false;
+    restorePhoto();
+  });
+  if (remove) {
+    remove.addEventListener("change", () => {
+      restorePhoto();
+      input.value = "";
+      input.disabled = remove.checked;
+      image.hidden = remove.checked || !savedSource;
+      initial.hidden = !image.hidden;
+      updateInitial();
+    });
+  }
   input.addEventListener("change", () => {
     restorePhoto();
     updateInitial();
