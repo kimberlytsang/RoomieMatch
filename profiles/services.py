@@ -105,7 +105,7 @@ def _clean_profile_picture(upload):
 
 def create_profile(
     user, *, display_name, bio, location_id, budget_range, pets_preference,
-    profile_picture=None,
+    profile_picture=None, sleep_preference=None, party_preference=None,
 ):
     """US-15: validate and create a profile and its preferences together."""
     display_name = display_name.strip()
@@ -121,10 +121,16 @@ def create_profile(
         errors["bio"] = "About me cannot contain null characters."
     elif len(bio) > 500:
         errors["bio"] = "About me must be at most 500 characters."
+    preferences = {
+        "location_id": location_id, "budget_range": budget_range,
+        "pets_preference": pets_preference,
+    }
+    if sleep_preference is not None:
+        preferences["sleep_preference"] = sleep_preference
+    if party_preference is not None:
+        preferences["party_preference"] = party_preference
     try:
-        preferences = _clean_preferences(
-            location_id=location_id, budget_range=budget_range, pets_preference=pets_preference,
-        )
+        preferences = _clean_preferences(preferences)
     except ValidationError as exc:
         errors.update(exc.message_dict)
     if errors:
@@ -219,9 +225,10 @@ def delete_profile(user):
         profile.delete()
 
 
-def _clean_preferences(*, location_id, budget_range, pets_preference):
-    """Validate the same three fields for profile creation and preference edits."""
+def _clean_preferences(values):
+    """Validate shared preference fields, preserving omitted lifestyle choices."""
     errors = {}
+    location_id = values.get("location_id", "")
     if isinstance(location_id, bool) or not isinstance(location_id, (int, str)):
         location_id = 0
     try:
@@ -234,17 +241,23 @@ def _clean_preferences(*, location_id, budget_range, pets_preference):
     )
     if location is None:
         errors["location_id"] = "Choose a valid location."
-    if budget_range not in BudgetRange.values:
-        errors["budget_range"] = "Choose a valid monthly budget."
-    if pets_preference not in PetsPreference.values:
-        errors["pets_preference"] = "Choose a pet preference."
+    cleaned = {"location": location}
+    for field, choices, message in (
+        ("budget_range", BudgetRange, "Choose a valid monthly budget."),
+        ("pets_preference", PetsPreference, "Choose a pet preference."),
+        ("sleep_preference", SleepPreference, "Choose a valid sleep preference."),
+        ("party_preference", PartyPreference, "Choose a valid party preference."),
+    ):
+        if field in ("sleep_preference", "party_preference") and field not in values:
+            continue
+        value = values.get(field, "")
+        if value not in choices.values:
+            errors[field] = message
+        else:
+            cleaned[field] = value
     if errors:
         raise ValidationError(errors)
-    return {
-        "location": location,
-        "budget_range": budget_range,
-        "pets_preference": pets_preference,
-    }
+    return cleaned
 
 
 def get_preferences(user):
@@ -253,10 +266,10 @@ def get_preferences(user):
 
 def save_preferences(user, values):
     """Create or replace the current user's preferences without changing their profile."""
-    fields = {"location_id", "budget_range", "pets_preference"}
+    fields = {"location_id", "budget_range", "pets_preference", "sleep_preference", "party_preference"}
     if not isinstance(values, dict) or set(values) - fields:
-        raise ValidationError("Only location, budget and pet preference can be saved.")
-    cleaned = _clean_preferences(**{field: values.get(field, "") for field in fields})
+        raise ValidationError("Only location, budget, pet, sleep and party preferences can be saved.")
+    cleaned = _clean_preferences(values)
     with transaction.atomic():
         get_user_model().objects.select_for_update().get(pk=user.pk)
         preference, _ = Preference.objects.update_or_create(user=user, defaults=cleaned)

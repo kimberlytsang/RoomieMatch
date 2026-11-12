@@ -26,10 +26,26 @@
         </div>
       </div>
       <div class="field-group">
+        <label for="preference-sleep">Sleep time</label>
+        <select id="preference-sleep">
+          {% for value, label in sleep_preferences %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field-group">
         <label for="preference-pets">Pets</label>
         <select id="preference-pets" required>
           <option value="">Choose a pet preference</option>
           {% for value, label in pets_preferences %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="preference-parties">Parties</label>
+        <select id="preference-parties">
+          {% for value, label in party_preferences %}
             <option value="{{ value }}">{{ label }}</option>
           {% endfor %}
         </select>
@@ -54,6 +70,8 @@
     const slider = document.getElementById("preference-budget-slider");
     const budgetOptions = Array.from(budget.options);
     const pets = document.getElementById("preference-pets");
+    const sleep = document.getElementById("preference-sleep");
+    const parties = document.getElementById("preference-parties");
     let loadRequestId = 0;
 
     const updateBudget = setupBudgetSlider(form.querySelector(".budget-control"));
@@ -87,6 +105,8 @@
         slider.value = String(budget.selectedIndex);
         updateBudget();
         pets.value = saved.pets_preference || "";
+        sleep.value = saved.sleep_preference || "NO_PREFERENCE";
+        parties.value = saved.party_preference || "NO_PREFERENCE";
         fields.disabled = false;
       } catch (error) {
         if (requestId !== loadRequestId || !editor.open) return;
@@ -114,6 +134,8 @@
           location_id: locationId.value,
           budget_range: budget.value,
           pets_preference: pets.value,
+          sleep_preference: sleep.value,
+          party_preference: parties.value,
         });
         if (response.status === 200) {
           window.location.reload();

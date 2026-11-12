@@ -10,7 +10,9 @@ from PIL import Image
 
 from accounts.models import User
 from profiles import services
-from profiles.models import BudgetRange, Location, PetsPreference, Preference, Profile
+from profiles.models import (
+    BudgetRange, Location, PartyPreference, PetsPreference, Preference, Profile, SleepPreference,
+)
 
 
 def image_bytes(image_format="PNG", color="coral"):
@@ -45,6 +47,8 @@ def details(db):
         "display_name": "Avery", "bio": "I like cooking.",
         "location_id": location.pk, "budget_range": BudgetRange.B1001_1500,
         "pets_preference": PetsPreference.NO_PETS,
+        "sleep_preference": SleepPreference.LATE,
+        "party_preference": PartyPreference.SOMETIMES,
     }
 
 
@@ -62,6 +66,9 @@ def test_create_saves_and_displays_real_photo(signed_in, user, details, image_fo
     assert response.url == reverse("my-profile")
     saved = Profile.objects.get(user=user)
     assert bytes(saved.profile_picture) == image_bytes(image_format)
+    preference = Preference.objects.get(user=user)
+    assert preference.sleep_preference == details["sleep_preference"]
+    assert preference.party_preference == details["party_preference"]
     photo_url = reverse("profile-photo", args=[user.pk])
     page = signed_in.get(response.url)
     assert f'src="{photo_url}"'.encode() in page.content

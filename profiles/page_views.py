@@ -127,6 +127,8 @@ def my_profile(request):
             "errors": errors,
             "budget_ranges": BudgetRange.choices,
             "pets_preferences": PetsPreference.choices,
+            "sleep_preferences": SleepPreference.choices,
+            "party_preferences": PartyPreference.choices,
         },
         status=400 if errors else 200,
     )
@@ -144,10 +146,14 @@ def create_profile(request):
         "location_id": "",
         "budget_range": BudgetRange.B1001_1500,
         "pets_preference": "",
+        "sleep_preference": SleepPreference.NO_PREFERENCE,
+        "party_preference": PartyPreference.NO_PREFERENCE,
     }
     errors = {}
     if request.method == "POST":
         values = {field: request.POST.get(field, "") for field in values}
+        values["sleep_preference"] = request.POST.get("sleep_preference", SleepPreference.NO_PREFERENCE)
+        values["party_preference"] = request.POST.get("party_preference", PartyPreference.NO_PREFERENCE)
         try:
             services.create_profile(
                 request.user, **values, profile_picture=request.FILES.get("profile_picture"),
@@ -168,6 +174,8 @@ def create_profile(request):
             "location_name": request.POST.get("location_name", ""),
             "budget_ranges": BudgetRange.choices,
             "pets_preferences": PetsPreference.choices,
+            "sleep_preferences": SleepPreference.choices,
+            "party_preferences": PartyPreference.choices,
         },
         status=400 if errors else 200,
     )

@@ -65,8 +65,16 @@
           <dd>{{ preference.location|default:"Not set" }}</dd>
         </div>
         <div>
+          <dt>Sleep time</dt>
+          <dd>{{ preference.get_sleep_preference_display|default:"Not set" }}</dd>
+        </div>
+        <div>
           <dt>Pets</dt>
           <dd>{{ preference.get_pets_preference_display|default:"Not set" }}</dd>
+        </div>
+        <div>
+          <dt>Parties</dt>
+          <dd>{{ preference.get_party_preference_display|default:"Not set" }}</dd>
         </div>
       </dl>
 

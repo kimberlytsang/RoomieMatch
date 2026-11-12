@@ -81,13 +81,16 @@
         <p>Tell us what you want at home.</p>
       </div>
       <div class="create-profile-preferences">
-        <fieldset class="create-profile-choice-group" disabled aria-describedby="sleep-hint">
+        <fieldset class="create-profile-choice-group" aria-describedby="sleep-hint">
           <legend>Sleep time</legend>
-          <p id="sleep-hint">Coming soon. This preference is not saved.</p>
+          <p id="sleep-hint">Your usual sleep schedule.</p>
           <div class="create-profile-options">
-            <label><input type="radio" name="sleep_preview" value="early"><span>Sleep early</span></label>
-            <label><input type="radio" name="sleep_preview" value="late"><span>Sleep late</span></label>
-            <label><input type="radio" name="sleep_preview" value="varies"><span>Sleep time varies</span></label>
+            {% for value, label in sleep_preferences %}
+              <label>
+                <input type="radio" name="sleep_preference" value="{{ value }}" {% if values.sleep_preference == value %}checked{% endif %}>
+                <span>{{ label }}</span>
+              </label>
+            {% endfor %}
           </div>
         </fieldset>
         <fieldset class="create-profile-choice-group" aria-describedby="pets-hint">
@@ -102,13 +105,16 @@
             {% endfor %}
           </div>
         </fieldset>
-        <fieldset class="create-profile-choice-group" disabled aria-describedby="parties-hint">
+        <fieldset class="create-profile-choice-group" aria-describedby="parties-hint">
           <legend>Parties</legend>
-          <p id="parties-hint">Coming soon. This preference is not saved.</p>
+          <p id="parties-hint">How you feel about parties at home.</p>
           <div class="create-profile-options">
-            <label><input type="radio" name="parties_preview" value="never"><span>No parties</span></label>
-            <label><input type="radio" name="parties_preview" value="sometimes"><span>Parties sometimes</span></label>
-            <label><input type="radio" name="parties_preview" value="often"><span>Parties often</span></label>
+            {% for value, label in party_preferences %}
+              <label>
+                <input type="radio" name="party_preference" value="{{ value }}" {% if values.party_preference == value %}checked{% endif %}>
+                <span>{{ label }}</span>
+              </label>
+            {% endfor %}
           </div>
         </fieldset>
       </div>
@@ -116,7 +122,7 @@
 
     <section class="create-profile-visibility" aria-labelledby="visibility-title">
       <h2 id="visibility-title">What others see</h2>
-      <p>Your name, location, budget, pet preference, and what you write about yourself.</p>
+      <p>Your name, photo, location, budget, home preferences, and what you write about yourself.</p>
       <p>Others cannot see your email or password.</p>
     </section>
     <div><button class="button-primary create-profile-submit" type="submit">Create profile</button></div>

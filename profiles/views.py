@@ -30,6 +30,8 @@ def preferences_me(request):
         "location_name": str(preference.location),
         "budget_range": preference.budget_range,
         "pets_preference": preference.pets_preference,
+        "sleep_preference": preference.sleep_preference,
+        "party_preference": preference.party_preference,
     })
     response["Cache-Control"] = "private, no-store"
     return response
@@ -55,11 +57,14 @@ def profile_me(request):
         elif request.method == "POST":
             data = json_body(request)
             fields = {"display_name", "bio", "location_id", "budget_range", "pets_preference"}
-            if set(data) - fields:
+            optional_fields = {"sleep_preference", "party_preference"}
+            if set(data) - fields - optional_fields:
                 return error(400, "Unsupported profile fields.")
             values = {field: data.get(field, "") for field in fields}
-            for field in ("display_name", "bio", "budget_range", "pets_preference"):
-                if not isinstance(values[field], str):
+            values.update({field: data[field] for field in optional_fields if field in data})
+            for field in ("display_name", "bio", "budget_range", "pets_preference",
+                          "sleep_preference", "party_preference"):
+                if field in values and not isinstance(values[field], str):
                     return error(400, f"{field} must be text.")
             location_id = values["location_id"]
             if isinstance(location_id, bool) or not isinstance(location_id, (str, int)):

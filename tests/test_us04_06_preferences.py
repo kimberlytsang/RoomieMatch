@@ -5,7 +5,9 @@ from django.urls import reverse
 
 from accounts.models import User
 from profiles import services
-from profiles.models import BudgetRange, Location, PetsPreference, Preference, Profile
+from profiles.models import (
+    BudgetRange, Location, PartyPreference, PetsPreference, Preference, Profile, SleepPreference,
+)
 
 URL = "/api/preferences/me"
 
@@ -60,6 +62,8 @@ def test_get_returns_only_current_users_preferences(signed_in, user, profile, lo
         "location_id": locations["Brooklyn"].pk,
         "budget_range": BudgetRange.OVER_3000,
         "pets_preference": PetsPreference.PET_FRIENDLY,
+        "sleep_preference": SleepPreference.LATE,
+        "party_preference": PartyPreference.OFTEN,
     })
     response = signed_in.get(URL, {"user_id": str(other.pk)})
     assert response.status_code == 200
@@ -68,6 +72,8 @@ def test_get_returns_only_current_users_preferences(signed_in, user, profile, lo
         "location_name": "Manhattan, NY",
         "budget_range": BudgetRange.B1001_1500,
         "pets_preference": PetsPreference.NO_PETS,
+        "sleep_preference": SleepPreference.NO_PREFERENCE,
+        "party_preference": PartyPreference.NO_PREFERENCE,
     }
     assert response["Cache-Control"] == "private, no-store"
 
@@ -81,6 +87,8 @@ def test_put_creates_preferences_with_each_budget_range(signed_in, user, values,
     assert saved.budget_range == budget_range
     assert saved.location_id == values["location_id"]
     assert saved.pets_preference == PetsPreference.NO_PETS
+    assert saved.sleep_preference == SleepPreference.NO_PREFERENCE
+    assert saved.party_preference == PartyPreference.NO_PREFERENCE
     assert signed_in.get(URL).json()["budget_range"] == budget_range
     assert not Profile.objects.filter(user=user).exists()
 
@@ -104,12 +112,16 @@ def test_update_replaces_preferences_without_changing_profile_or_other_user(
         "location_id": locations["Brooklyn"].pk,
         "budget_range": BudgetRange.B1501_2000,
         "pets_preference": PetsPreference.PET_FRIENDLY,
+        "sleep_preference": SleepPreference.LATE,
+        "party_preference": PartyPreference.OFTEN,
     }
     assert signed_in.put(URL, changed, content_type="application/json").status_code == 200
     saved = Preference.objects.get(user=user)
     assert saved.location_id == changed["location_id"]
     assert saved.budget_range == changed["budget_range"]
     assert saved.pets_preference == changed["pets_preference"]
+    assert saved.sleep_preference == changed["sleep_preference"]
+    assert saved.party_preference == changed["party_preference"]
     assert Preference.objects.filter(user=user).count() == 1
     assert Profile.objects.filter(user=user).values().get() == old_profile
     assert Preference.objects.filter(user=other).values().get() == other_preferences
@@ -120,6 +132,8 @@ def test_page_and_new_login_read_saved_choices(signed_in, user, profile, locatio
         "location_id": locations["Brooklyn"].pk,
         "budget_range": BudgetRange.B1501_2000,
         "pets_preference": PetsPreference.PET_FRIENDLY,
+        "sleep_preference": SleepPreference.LATE,
+        "party_preference": PartyPreference.OFTEN,
     }
     assert signed_in.put(URL, changed, content_type="application/json").status_code == 200
     for _ in range(2):
@@ -128,6 +142,10 @@ def test_page_and_new_login_read_saved_choices(signed_in, user, profile, locatio
         assert page.context["preference"].budget_range == changed["budget_range"]
         assert list(page.context["budget_ranges"]) == list(BudgetRange.choices)
         assert list(page.context["pets_preferences"]) == list(PetsPreference.choices)
+        assert list(page.context["sleep_preferences"]) == list(SleepPreference.choices)
+        assert list(page.context["party_preferences"]) == list(PartyPreference.choices)
+        assert b"<dd>Sleep late</dd>" in page.content
+        assert b"<dd>Parties often</dd>" in page.content
         for text in (b"Brooklyn, NY", b"$1,501-$2,000", b"Pet friendly", b"Edit preferences"):
             assert text in page.content
     assert signed_in.post(reverse("auth-logout")).status_code == 204
@@ -147,15 +165,25 @@ def test_page_and_new_login_read_saved_choices(signed_in, user, profile, locatio
     ("location_id", 2147483647), ("location_id", "9" * 5000),
     ("budget_range", ""), ("budget_range", None), ("budget_range", "INVALID"), ("budget_range", []),
     ("pets_preference", ""), ("pets_preference", None), ("pets_preference", "INVALID"), ("pets_preference", {}),
+    ("sleep_preference", ""), ("sleep_preference", None), ("sleep_preference", "INVALID"),
+    ("sleep_preference", True), ("sleep_preference", []), ("sleep_preference", {}),
+    ("party_preference", ""), ("party_preference", None), ("party_preference", "INVALID"),
+    ("party_preference", True), ("party_preference", []), ("party_preference", {}),
 ])
 def test_invalid_preferences_do_not_create_or_partially_update(
     signed_in, user, values, field, invalid, existing,
 ):
     before = None
     if existing:
-        services.save_preferences(user, values)
+        services.save_preferences(user, {
+            **values, "sleep_preference": SleepPreference.LATE, "party_preference": PartyPreference.OFTEN,
+        })
         before = Preference.objects.filter(user=user).values().get()
-    changed = {**values, "budget_range": BudgetRange.OVER_3000, field: invalid}
+    changed = {
+        **values, "budget_range": BudgetRange.OVER_3000,
+        "sleep_preference": SleepPreference.EARLY, "party_preference": PartyPreference.NO_PARTIES,
+        field: invalid,
+    }
     response = signed_in.put(URL, changed, content_type="application/json")
     assert response.status_code == 400
     assert response.json()["error"]
@@ -199,6 +227,7 @@ def test_preferences_and_locations_require_login(client, db, method, url):
 
 
 def test_put_requires_csrf_and_accepts_a_valid_token(user, values):
+    values.update(sleep_preference=SleepPreference.LATE, party_preference=PartyPreference.OFTEN)
     client = Client(enforce_csrf_checks=True)
     client.force_login(user)
     assert client.put(URL, values, content_type="application/json").status_code == 403
@@ -207,7 +236,10 @@ def test_put_requires_csrf_and_accepts_a_valid_token(user, values):
     response = client.put(URL, values, content_type="application/json",
                           HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value)
     assert response.status_code == 200
-    assert Preference.objects.get(user=user).pets_preference == PetsPreference.NO_PETS
+    saved = Preference.objects.get(user=user)
+    assert saved.pets_preference == PetsPreference.NO_PETS
+    assert saved.sleep_preference == SleepPreference.LATE
+    assert saved.party_preference == PartyPreference.OFTEN
 
 
 @pytest.mark.parametrize("method, url", [
@@ -247,25 +279,70 @@ def test_updated_preferences_are_used_by_profile_and_roommate_filters(
     searcher = Client()
     searcher.force_login(viewer)
     search_url = reverse("roommate-list")
+    services.save_preferences(user, {
+        **values, "sleep_preference": SleepPreference.EARLY, "party_preference": PartyPreference.NO_PARTIES,
+    })
     old_filters = {
         "location": values["location_id"], "budget": values["budget_range"],
         "pets": values["pets_preference"],
+        "sleep": SleepPreference.EARLY, "parties": PartyPreference.NO_PARTIES,
     }
     assert searcher.get(search_url, old_filters).context["roommates"].filter(user=user).exists()
     changed = {
         "location_id": locations["Brooklyn"].pk,
         "budget_range": BudgetRange.OVER_3000,
         "pets_preference": PetsPreference.PET_FRIENDLY,
+        "sleep_preference": SleepPreference.LATE,
+        "party_preference": PartyPreference.OFTEN,
     }
     assert signed_in.put(URL, changed, content_type="application/json").status_code == 200
     assert not searcher.get(search_url, old_filters).context["roommates"].filter(user=user).exists()
     new_filters = {
         "location": changed["location_id"], "budget": changed["budget_range"],
         "pets": changed["pets_preference"],
+        "sleep": changed["sleep_preference"], "parties": changed["party_preference"],
     }
     assert searcher.get(search_url, new_filters).context["roommates"].filter(user=user).exists()
     detail = searcher.get(reverse("roommate-detail", args=[user.pk]))
     own_page = signed_in.get(reverse("my-profile"))
-    for text in (b"Brooklyn, NY", b"$3,001+", b"Pet friendly"):
+    for text in (b"Brooklyn, NY", b"$3,001+", b"Pet friendly", b"Sleep late", b"Parties often"):
         assert text in detail.content
         assert text in own_page.content
+
+
+@pytest.mark.parametrize("sleep, parties", list(zip(SleepPreference.values, PartyPreference.values)))
+def test_lifestyle_choices_can_be_updated(signed_in, user, profile, values, sleep, parties):
+    services.save_preferences(user, {
+        **values, "sleep_preference": SleepPreference.LATE, "party_preference": PartyPreference.OFTEN,
+    })
+    before = Profile.objects.filter(user=user).values().get()
+    response = signed_in.put(URL, {
+        **values, "sleep_preference": sleep, "party_preference": parties,
+    }, content_type="application/json")
+    assert response.status_code == 200
+    saved = Preference.objects.get(user=user)
+    assert saved.sleep_preference == sleep
+    assert saved.party_preference == parties
+    restored = signed_in.get(URL).json()
+    assert restored["sleep_preference"] == sleep
+    assert restored["party_preference"] == parties
+    assert Profile.objects.filter(user=user).values().get() == before
+
+
+@pytest.mark.parametrize("changes, sleep, parties", [
+    ({}, SleepPreference.LATE, PartyPreference.OFTEN),
+    ({"sleep_preference": SleepPreference.NO_PREFERENCE}, SleepPreference.NO_PREFERENCE, PartyPreference.OFTEN),
+    ({"party_preference": PartyPreference.NO_PREFERENCE}, SleepPreference.LATE, PartyPreference.NO_PREFERENCE),
+])
+def test_omitted_lifestyle_choices_are_not_reset(signed_in, user, profile, values, changes, sleep, parties):
+    services.save_preferences(user, {
+        **values, "sleep_preference": SleepPreference.LATE, "party_preference": PartyPreference.OFTEN,
+    })
+    response = signed_in.put(URL, {
+        **values, "budget_range": BudgetRange.OVER_3000, **changes,
+    }, content_type="application/json")
+    assert response.status_code == 200
+    saved = Preference.objects.get(user=user)
+    assert saved.sleep_preference == sleep
+    assert saved.party_preference == parties
+    assert saved.budget_range == BudgetRange.OVER_3000
