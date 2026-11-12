@@ -75,9 +75,8 @@ def test_profile_shows_shared_housing_and_lifestyle_preferences(client, profiles
     assert response.status_code == 200
     assert b"$1,001-$1,500 / month" in response.content
     assert b"Boston, MA" in response.content
-    assert b"Sleep early" in response.content
-    assert b"No pets" in response.content
-    assert b"No parties" in response.content
+    assert b"Sleep early \xc2\xb7 No pets \xc2\xb7 No parties" in response.content
+    assert b"Sleep: Sleep early" not in response.content
 
 
 def test_unavailable_profile_shows_a_safe_message(client, profiles):
