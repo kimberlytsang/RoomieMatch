@@ -1,0 +1,152 @@
+<details id="preferences-editor" class="my-profile-edit-form preferences-editor">
+  <summary>Edit preferences</summary>
+  <form id="preferences-form" method="post" action="{% url 'preferences-me' %}">
+    {% csrf_token %}
+    <fieldset id="preferences-fields" disabled>
+      <div class="field-group" data-location-autocomplete data-locations-url="{% url 'locations' %}">
+        <label for="preference-location">Location</label>
+        <input id="preference-location" type="text" autocomplete="off" maxlength="152" aria-controls="preference-locations" aria-describedby="preference-location-hint" data-location-input required>
+        <input id="preference-location-id" type="hidden" data-location-id>
+        <div id="preference-locations" class="location-suggestions" role="group" aria-label="Location suggestions" data-location-suggestions></div>
+        <p id="preference-location-hint" role="status" data-location-hint>Type a city or neighborhood and choose a suggestion.</p>
+      </div>
+      <div class="field-group budget-control">
+        <label for="preference-budget-slider">Monthly budget</label>
+        <select id="preference-budget" hidden disabled>
+          {% for value, label in budget_ranges %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <div class="budget-summary">Selected range: <output id="preference-budget-value" for="preference-budget-slider"></output><span>per month</span></div>
+        <input id="preference-budget-slider" type="range" min="0" max="6" step="1">
+        <div class="budget-options" role="group" aria-label="Choose one monthly budget range">
+          {% for value, label in budget_ranges %}
+            <button type="button" data-budget-option aria-pressed="false">{{ label }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="preference-sleep">Sleep time</label>
+        <select id="preference-sleep">
+          {% for value, label in sleep_preferences %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="preference-pets">Pets</label>
+        <select id="preference-pets" required>
+          <option value="">Choose a pet preference</option>
+          {% for value, label in pets_preferences %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="preference-parties">Parties</label>
+        <select id="preference-parties">
+          {% for value, label in party_preferences %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="my-profile-actions">
+        <button class="button-primary" type="submit">Save preferences</button>
+        <button class="my-profile-secondary" id="cancel-preferences" type="button">Cancel</button>
+      </div>
+    </fieldset>
+    <p id="preferences-message" class="form-message" role="alert"></p>
+  </form>
+</details>
+<script>
+  (() => {
+    const editor = document.getElementById("preferences-editor");
+    const form = document.getElementById("preferences-form");
+    const fields = document.getElementById("preferences-fields");
+    const message = document.getElementById("preferences-message");
+    const locationInput = document.getElementById("preference-location");
+    const locationId = document.getElementById("preference-location-id");
+    const budget = document.getElementById("preference-budget");
+    const slider = document.getElementById("preference-budget-slider");
+    const budgetOptions = Array.from(budget.options);
+    const pets = document.getElementById("preference-pets");
+    const sleep = document.getElementById("preference-sleep");
+    const parties = document.getElementById("preference-parties");
+    let loadRequestId = 0;
+
+    const updateBudget = setupBudgetSlider(form.querySelector(".budget-control"));
+    const setLocation = setupLocationAutocomplete(form.querySelector("[data-location-autocomplete]"));
+
+    async function preferencesRequest(method, body) {
+      const response = await fetch("{% url 'preferences-me' %}", {
+        method,
+        cache: "no-store",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok && response.status !== 404) {
+        throw new Error(data.error || "Could not save preferences. Please try again.");
+      }
+      return { status: response.status, data };
+    }
+
+    editor.addEventListener("toggle", async () => {
+      const requestId = ++loadRequestId;
+      fields.disabled = true;
+      if (!editor.open) return;
+      message.textContent = "";
+      try {
+        const response = await preferencesRequest("GET");
+        if (requestId !== loadRequestId || !editor.open) return;
+        const saved = response.status === 404 ? {} : response.data;
+        setLocation(saved.location_id, saved.location_name);
+        budget.value = saved.budget_range || budgetOptions[0].value;
+        slider.value = String(budget.selectedIndex);
+        updateBudget();
+        pets.value = saved.pets_preference || "";
+        sleep.value = saved.sleep_preference || "NO_PREFERENCE";
+        parties.value = saved.party_preference || "NO_PREFERENCE";
+        fields.disabled = false;
+      } catch (error) {
+        if (requestId !== loadRequestId || !editor.open) return;
+        message.textContent = error.message || "Could not load preferences. Please try again.";
+      }
+    });
+
+    document.getElementById("cancel-preferences").addEventListener("click", () => {
+      loadRequestId++;
+      fields.disabled = true;
+      editor.open = false;
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!locationId.value) {
+        locationInput.reportValidity();
+        return;
+      }
+      loadRequestId++;
+      fields.disabled = true;
+      message.textContent = "";
+      try {
+        const response = await preferencesRequest("PUT", {
+          location_id: locationId.value,
+          budget_range: budget.value,
+          pets_preference: pets.value,
+          sleep_preference: sleep.value,
+          party_preference: parties.value,
+        });
+        if (response.status === 200) {
+          window.location.reload();
+          return;
+        }
+        message.textContent = response.data.error || "Could not save preferences. Please try again.";
+      } catch (error) {
+        message.textContent = error.message || "Could not save preferences. Please try again.";
+      } finally {
+        fields.disabled = false;
+      }
+    });
+  })();
+</script>

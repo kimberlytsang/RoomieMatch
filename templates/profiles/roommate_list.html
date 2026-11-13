@@ -7,7 +7,7 @@
   <section class="roommate-heading">
     <p class="eyebrow">Find a roommate</p>
     <h1>Find a roommate</h1>
-    <p>Search by name or choose a location, budget, and pet preference to narrow your results.</p>
+    <p>Search by name or choose a location, budget, and home preferences to narrow your results.</p>
   </section>
 
   <form class="roommate-filters" method="get" aria-label="Filter roommates">
@@ -34,11 +34,29 @@
       </select>
     </div>
     <div class="filter-field">
-      <label for="pets">Preferences</label>
+      <label for="sleep">Sleep time</label>
+      <select id="sleep" name="sleep">
+        <option value="">Any sleep time</option>
+        {% for value, label in sleep_preferences %}
+          <option value="{{ value }}"{% if selected_filters.sleep == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="pets">Pet preference</label>
       <select id="pets" name="pets">
-        <option value="">No preferences</option>
+        <option value="">Any pet preference</option>
         {% for value, label in pets_preferences %}
           <option value="{{ value }}"{% if selected_filters.pets == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="parties">Party preference</label>
+      <select id="parties" name="parties">
+        <option value="">Any party preference</option>
+        {% for value, label in party_preferences %}
+          <option value="{{ value }}"{% if selected_filters.parties == value %} selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
@@ -68,7 +86,11 @@
               <p class="roommate-location">{{ roommate.user.preference.location }}</p>
               <p class="roommate-budget">{{ roommate.user.preference.get_budget_range_display }} / month</p>
               <p class="roommate-bio">{{ roommate.bio|default:"This roommate has not added an introduction yet." }}</p>
-              <p class="preference-chip">{{ roommate.user.preference.get_pets_preference_display }}</p>
+              <div class="preference-chips" aria-label="Home preferences">
+                <p class="preference-chip">{{ roommate.user.preference.get_sleep_preference_display }}</p>
+                <p class="preference-chip">{{ roommate.user.preference.get_pets_preference_display }}</p>
+                <p class="preference-chip">{{ roommate.user.preference.get_party_preference_display }}</p>
+              </div>
               <a class="roommate-profile-link" href="{% url 'roommate-detail' roommate.user_id %}">View profile</a>
             </div>
           </article>

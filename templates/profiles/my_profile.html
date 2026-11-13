@@ -4,16 +4,18 @@
 {% block title %}My Profile - RoomieMatch{% endblock %}
 
 {% block content %}
+<script src="{% static 'js/profile_forms.js' %}?v=20261112-create-remove-photo-1"></script>
 <main class="page-wrap roommate-page my-profile-page">
   <p class="my-profile-breadcrumb">My profile</p>
 
   <div class="my-profile-layout">
     <div class="my-profile-portrait">
-      <div class="my-profile-photo">
-        <img src="{% static 'images/male_homepage_image.jpg' %}" alt="Demo profile photo" width="470" height="440">
+      <div class="my-profile-photo roommate-avatar">
+        <img {% if profile.profile_picture %}src="{% url 'profile-photo' profile.user_id %}"{% else %}hidden{% endif %} alt="{{ profile.display_name }}'s profile photo" width="470" height="440">
+        <span data-photo-initial role="img" aria-label="Default profile photo"{% if profile.profile_picture %} hidden{% endif %}>{{ profile.display_name|first|upper }}</span>
       </div>
-      <button class="my-profile-photo-button" type="button" data-edit-profile aria-controls="profile-edit-form" aria-expanded="false" disabled>
-        Edit profile
+      <button class="my-profile-photo-button" type="button" data-edit-profile data-edit-picture aria-controls="profile-edit-form" aria-expanded="false" disabled>
+        Edit picture
       </button>
     </div>
 
@@ -26,24 +28,40 @@
 
       <p class="my-profile-bio">{{ profile.bio|default:"No introduction yet." }}</p>
 
-      <form id="profile-edit-form" class="my-profile-edit-form" method="post" hidden>
+      <form id="profile-edit-form" class="my-profile-edit-form" method="post" action="{% url 'my-profile' %}" enctype="multipart/form-data" {% if not errors %}hidden{% endif %}>
         {% csrf_token %}
         <h2>Edit profile</h2>
         <fieldset id="profile-edit-fields">
           <div class="field-group">
             <label for="profile-display-name">Display Name</label>
-            <input id="profile-display-name" name="display_name" type="text" value="{{ profile.display_name }}" maxlength="50" autocomplete="name" required>
+            <input id="profile-display-name" name="display_name" type="text" value="{{ values.display_name }}" data-saved-value="{{ profile.display_name }}" maxlength="50" autocomplete="name" required>
           </div>
           <div class="field-group">
             <label for="profile-bio">Bio</label>
-            <textarea id="profile-bio" name="bio" rows="4" maxlength="500">{{ profile.bio }}</textarea>
+            <textarea id="profile-bio" name="bio" rows="4" maxlength="500" data-saved-value="{{ profile.bio }}">{{ values.bio }}</textarea>
           </div>
+          <div class="field-group">
+            <label for="profile-picture">Profile photo</label>
+            <input id="profile-picture" name="profile_picture" type="file" accept="image/jpeg,image/png" aria-describedby="photo-hint">
+            <p class="field-hint" id="photo-hint">JPEG or PNG, up to 2 MB. Leave empty to keep your current photo.</p>
+          </div>
+          {% if profile.profile_picture %}
+            <div class="field-group">
+              <label for="remove-profile-picture">
+                <input id="remove-profile-picture" name="remove_picture" type="checkbox" aria-describedby="remove-photo-hint">
+                Remove Photo
+              </label>
+              <p class="field-hint" id="remove-photo-hint">Save Changes to remove your photo. Uncheck to upload a replacement.</p>
+            </div>
+          {% endif %}
           <div class="my-profile-actions">
             <button class="button-primary" type="submit">Save Changes</button>
             <button class="my-profile-secondary" id="cancel-profile-edit" type="button">Cancel</button>
           </div>
         </fieldset>
-        <p class="form-message" id="profile-edit-error" role="alert"></p>
+        <p class="form-message" id="profile-edit-error" role="alert">
+          {% for field, messages in errors.items %}{{ messages|join:" " }}<br>{% endfor %}
+        </p>
       </form>
 
       <dl class="my-profile-preferences">
@@ -56,10 +74,20 @@
           <dd>{{ preference.location|default:"Not set" }}</dd>
         </div>
         <div>
+          <dt>Sleep time</dt>
+          <dd>{{ preference.get_sleep_preference_display|default:"Not set" }}</dd>
+        </div>
+        <div>
           <dt>Pets</dt>
           <dd>{{ preference.get_pets_preference_display|default:"Not set" }}</dd>
         </div>
+        <div>
+          <dt>Parties</dt>
+          <dd>{{ preference.get_party_preference_display|default:"Not set" }}</dd>
+        </div>
       </dl>
+
+      {% include "profiles/preferences_form.html" %}
 
       <button class="my-profile-edit-button" type="button" data-edit-profile aria-controls="profile-edit-form" aria-expanded="false" disabled>
         Edit profile
@@ -89,7 +117,6 @@
   (() => {
     const editButtons = document.querySelectorAll("[data-edit-profile]");
     const editForm = document.getElementById("profile-edit-form");
-    const editFields = document.getElementById("profile-edit-fields");
     const nameInput = document.getElementById("profile-display-name");
     const bioInput = document.getElementById("profile-bio");
     const editError = document.getElementById("profile-edit-error");
@@ -98,13 +125,12 @@
     const confirmDelete = document.getElementById("confirm-profile-delete");
     const cancelDelete = document.getElementById("cancel-profile-delete");
     const deleteError = document.getElementById("profile-delete-error");
-    let editTrigger;
+    let editTrigger = editButtons[0];
 
-    async function profileRequest(method, body) {
+    async function deleteProfile() {
       const response = await fetch("{% url 'profile-me' %}", {
-        method,
-        headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken() },
-        body: body === undefined ? undefined : JSON.stringify(body),
+        method: "DELETE",
+        headers: { "X-CSRFToken": csrfToken() },
       });
       let data = null;
       if (response.status !== 204) {
@@ -117,59 +143,40 @@
       nameInput.setCustomValidity(nameInput.value.trim() ? "" : "Enter your name.");
     };
     nameInput.addEventListener("input", validateName);
+    setupPhotoPreview(editForm, document.querySelector(".my-profile-photo"), nameInput);
+
+    const setEditing = (editing) => {
+      editForm.hidden = !editing;
+      editButtons.forEach((button) => {
+        button.disabled = editing;
+        button.setAttribute("aria-expanded", String(editing));
+      });
+      deleteButton.disabled = editing;
+    };
 
     editButtons.forEach((button) => {
-      button.disabled = false;
       button.addEventListener("click", () => {
         editTrigger = button;
         editForm.reset();
+        nameInput.value = nameInput.dataset.savedValue;
+        bioInput.value = bioInput.dataset.savedValue;
         editError.textContent = "";
         validateName();
-        editForm.hidden = false;
-        editButtons.forEach((item) => {
-          item.disabled = true;
-          item.setAttribute("aria-expanded", "true");
-        });
-        deleteButton.disabled = true;
-        nameInput.focus();
+        setEditing(true);
+        if (button.hasAttribute("data-edit-picture")) document.getElementById("profile-picture").focus();
+        else nameInput.focus();
       });
     });
 
     document.getElementById("cancel-profile-edit").addEventListener("click", () => {
       editForm.reset();
-      editForm.hidden = true;
       editError.textContent = "";
-      editButtons.forEach((button) => {
-        button.disabled = false;
-        button.setAttribute("aria-expanded", "false");
-      });
-      deleteButton.disabled = false;
+      setEditing(false);
       editTrigger.focus();
     });
 
-    editForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      editError.textContent = "";
-      editFields.disabled = true;
-      try {
-        const response = await profileRequest("PATCH", {
-          display_name: nameInput.value,
-          bio: bioInput.value,
-        });
-        if (response.status === 200) {
-          window.location.reload();
-          return;
-        }
-        editError.textContent = (response.data && response.data.error)
-          || "Could not save your profile. Please refresh the page and try again.";
-      } catch (error) {
-        editError.textContent = "Could not save your profile. Check your connection and try again.";
-      } finally {
-        editFields.disabled = false;
-      }
-    });
+    setEditing(!editForm.hidden);
 
-    deleteButton.disabled = false;
     deleteButton.addEventListener("click", () => {
       deleteError.textContent = "";
       dialog.showModal();
@@ -184,7 +191,7 @@
       cancelDelete.disabled = true;
       deleteError.textContent = "";
       try {
-        const response = await profileRequest("DELETE");
+        const response = await deleteProfile();
         if (response.status === 204) {
           window.location.href = "{% url 'create-profile' %}";
           return;

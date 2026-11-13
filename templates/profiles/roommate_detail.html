@@ -12,9 +12,10 @@
       <h1>{{ roommate.display_name }}</h1>
       <p class="roommate-location">{{ roommate.user.preference.location }}</p>
       <p class="roommate-bio">{{ roommate.bio|default:"This roommate has not added an introduction yet." }}</p>
-      <dl class="roommate-facts">
-        <div><dt>Budget</dt><dd>{{ roommate.user.preference.get_budget_range_display }} / month</dd></div>
-        <div><dt>Pet preference</dt><dd>{{ roommate.user.preference.get_pets_preference_display }}</dd></div>
+      <dl class="roommate-profile-facts">
+        <div><dt>Monthly budget</dt><dd>{{ roommate.user.preference.get_budget_range_display }} / month</dd></div>
+        <div><dt>Location</dt><dd>{{ roommate.user.preference.location }}</dd></div>
+        <div><dt>Home preferences</dt><dd>{{ roommate.user.preference.get_sleep_preference_display }} · {{ roommate.user.preference.get_pets_preference_display }} · {{ roommate.user.preference.get_party_preference_display }}</dd></div>
       </dl>
     </div>
   </article>

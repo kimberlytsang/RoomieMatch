@@ -5,7 +5,9 @@ from django.urls import reverse
 
 from accounts.models import User
 from profiles import services
-from profiles.models import BudgetRange, Location, PetsPreference, Preference, Profile
+from profiles.models import (
+    BudgetRange, Location, PartyPreference, PetsPreference, Preference, Profile, SleepPreference,
+)
 
 URL = "/api/profiles/me"
 
@@ -53,6 +55,8 @@ def test_post_creates_profile_and_preferences(signed_in, user, details):
     assert preference.location_id == details["location_id"]
     assert preference.budget_range == details["budget_range"]
     assert preference.pets_preference == details["pets_preference"]
+    assert preference.sleep_preference == SleepPreference.NO_PREFERENCE
+    assert preference.party_preference == PartyPreference.NO_PREFERENCE
 
 
 def test_get_reads_only_own_profile(signed_in, user, profile):
@@ -138,6 +142,7 @@ def test_write_requires_csrf(user, profile, details, method):
 
 
 def test_valid_csrf_allows_create_update_and_delete(user, details):
+    details.update(sleep_preference=SleepPreference.LATE, party_preference=PartyPreference.OFTEN)
     client = Client(enforce_csrf_checks=True)
     client.force_login(user)
     client.get("/create-profile/")
@@ -161,6 +166,10 @@ def test_invalid_json_returns_error(signed_in, user, method, body):
     ("display_name", None), ("bio", 123), ("location_id", True),
     ("location_id", 1.5), ("budget_range", []), ("pets_preference", {}),
     ("display_name", " "), ("location_id", "invalid"),
+    ("sleep_preference", None), ("sleep_preference", []),
+    ("sleep_preference", ""), ("sleep_preference", "INVALID"),
+    ("party_preference", None), ("party_preference", True),
+    ("party_preference", ""), ("party_preference", "INVALID"),
 ])
 def test_post_rejects_invalid_values_without_saving(signed_in, user, details, field, value):
     response = signed_in.post(URL, {**details, field: value}, content_type="application/json")
@@ -225,4 +234,26 @@ def test_patch_rejects_null_characters(signed_in, user, profile, field, label):
     profile.refresh_from_db()
     assert profile.display_name == "Avery"
     assert profile.bio == "I like cooking."
+    assert Preference.objects.filter(user=user).values().get() == before
+
+
+@pytest.mark.parametrize("sleep, parties", list(zip(SleepPreference.values, PartyPreference.values)))
+def test_post_accepts_lifestyle_choices(signed_in, user, details, sleep, parties):
+    response = signed_in.post(URL, {
+        **details, "sleep_preference": sleep, "party_preference": parties,
+    }, content_type="application/json")
+    assert response.status_code == 201
+    saved = Preference.objects.get(user=user)
+    assert saved.sleep_preference == sleep
+    assert saved.party_preference == parties
+
+
+def test_legacy_post_preserves_existing_lifestyle_choices(signed_in, user, details):
+    services.save_preferences(user, {
+        "location_id": details["location_id"], "budget_range": details["budget_range"],
+        "pets_preference": details["pets_preference"], "sleep_preference": SleepPreference.LATE,
+        "party_preference": PartyPreference.OFTEN,
+    })
+    before = Preference.objects.filter(user=user).values().get()
+    assert signed_in.post(URL, details, content_type="application/json").status_code == 201
     assert Preference.objects.filter(user=user).values().get() == before

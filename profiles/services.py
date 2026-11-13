@@ -1,14 +1,34 @@
 """Business rules and database queries for roommate discovery."""
 
+from io import BytesIO
+import warnings
+
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from .models import BudgetRange, Location, PetsPreference, Preference, Profile
+from .models import (
+    BudgetRange,
+    Location,
+    PartyPreference,
+    PetsPreference,
+    Preference,
+    Profile,
+    SleepPreference,
+)
 
 
 def list_available_roommates(
-    viewer, *, location_id=None, budget_range=None, pets_preference=None, name=""
+    viewer,
+    *,
+    location_id=None,
+    budget_range=None,
+    pets_preference=None,
+    sleep_preference=None,
+    party_preference=None,
+    name="",
 ):
     """Return profiles a signed-in seeker can browse.
 
@@ -26,6 +46,10 @@ def list_available_roommates(
         roommates = roommates.filter(user__preference__budget_range=budget_range)
     if pets_preference in PetsPreference.values:
         roommates = roommates.filter(user__preference__pets_preference=pets_preference)
+    if sleep_preference in SleepPreference.values:
+        roommates = roommates.filter(user__preference__sleep_preference=sleep_preference)
+    if party_preference in PartyPreference.values:
+        roommates = roommates.filter(user__preference__party_preference=party_preference)
     if name.strip():
         roommates = roommates.filter(display_name__icontains=name.strip())
     return roommates.order_by("display_name")
@@ -44,7 +68,45 @@ class ProfileAlreadyExists(Exception):
     pass
 
 
-def create_profile(user, *, display_name, bio, location_id, budget_range, pets_preference):
+def _clean_profile_picture(upload):
+    """Return verified JPEG/PNG bytes, or None when no file was selected."""
+    if upload is None:
+        return None
+    limit = 2 * 1024 * 1024
+    if upload.size > limit:
+        raise ValidationError({"profile_picture": "Profile photo must be 2 MB or smaller."})
+    data = upload.read(limit + 1)
+    if len(data) > limit:
+        raise ValidationError({"profile_picture": "Profile photo must be 2 MB or smaller."})
+    if not data:
+        raise ValidationError({"profile_picture": "Choose a non-empty image file."})
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(BytesIO(data), formats=("JPEG", "PNG")) as picture:
+                image_format = picture.format
+                picture.verify()
+            # Reopen to decode the pixels too; verify alone misses truncated JPEGs.
+            with Image.open(BytesIO(data), formats=("JPEG", "PNG")) as picture:
+                picture.load()
+        extensions, content_type = {
+            "JPEG": ({"jpg", "jpeg"}, "image/jpeg"),
+            "PNG": ({"png"}, "image/png"),
+        }[image_format]
+        if (upload.name.rsplit(".", 1)[-1].lower() not in extensions
+                or upload.content_type != content_type):
+            raise ValueError("Image format does not match its filename or type.")
+    except (OSError, ValueError, SyntaxError, Image.DecompressionBombError,
+            Image.DecompressionBombWarning):
+        raise ValidationError({"profile_picture": "Choose a valid JPEG or PNG image."})
+    return data
+
+
+def create_profile(
+    user, *, display_name, bio, location_id, budget_range, pets_preference,
+    profile_picture=None, sleep_preference=None, party_preference=None,
+):
     """US-15: validate and create a profile and its preferences together."""
     display_name = display_name.strip()
     bio = bio.strip()
@@ -59,22 +121,22 @@ def create_profile(user, *, display_name, bio, location_id, budget_range, pets_p
         errors["bio"] = "About me cannot contain null characters."
     elif len(bio) > 500:
         errors["bio"] = "About me must be at most 500 characters."
+    preferences = {
+        "location_id": location_id, "budget_range": budget_range,
+        "pets_preference": pets_preference,
+    }
+    if sleep_preference is not None:
+        preferences["sleep_preference"] = sleep_preference
+    if party_preference is not None:
+        preferences["party_preference"] = party_preference
     try:
-        location_id = int(location_id)
-    except (TypeError, ValueError):
-        location_id = 0
-    location = (
-        Location.objects.filter(pk=location_id).first()
-        if 0 < location_id <= 2147483647 else None
-    )
-    if location is None:
-        errors["location_id"] = "Choose a valid location."
-    if budget_range not in BudgetRange.values:
-        errors["budget_range"] = "Choose a valid monthly budget."
-    if pets_preference not in PetsPreference.values:
-        errors["pets_preference"] = "Choose a pet preference."
+        preferences = _clean_preferences(preferences)
+    except ValidationError as exc:
+        errors.update(exc.message_dict)
     if errors:
         raise ValidationError(errors)
+
+    picture = _clean_profile_picture(profile_picture)
 
     with transaction.atomic():
         # Lock the owner so repeated submissions cannot create two profiles.
@@ -83,13 +145,11 @@ def create_profile(user, *, display_name, bio, location_id, budget_range, pets_p
             raise ProfileAlreadyExists
         Preference.objects.update_or_create(
             user=user,
-            defaults={
-                "location": location,
-                "budget_range": budget_range,
-                "pets_preference": pets_preference,
-            },
+            defaults=preferences,
         )
-        return Profile.objects.create(user=user, display_name=display_name, bio=bio)
+        return Profile.objects.create(
+            user=user, display_name=display_name, bio=bio, profile_picture=picture,
+        )
 
 
 def _clean_profile_text(values):
@@ -130,8 +190,8 @@ def get_profile(user):
     return Profile.objects.get(user=user)
 
 
-def update_profile(user, changes):
-    """Update only the supplied name and bio fields."""
+def update_profile(user, changes, *, profile_picture=None, remove_picture=False):
+    """Update profile text and upload or remove a photo together."""
     if not isinstance(changes, dict):
         raise ValidationError("Profile changes must be an object.")
 
@@ -142,6 +202,13 @@ def update_profile(user, changes):
         raise ValidationError("Provide a name or about me to update.")
 
     cleaned = _clean_profile_text(changes)
+    if remove_picture and profile_picture is not None:
+        raise ValidationError({"profile_picture": "Choose a new photo or Remove Photo, not both."})
+    picture = _clean_profile_picture(profile_picture)
+    if remove_picture:
+        cleaned["profile_picture"] = None
+    elif picture is not None:
+        cleaned["profile_picture"] = picture
 
     with transaction.atomic():
         get_user_model().objects.select_for_update().get(pk=user.pk)
@@ -160,3 +227,63 @@ def delete_profile(user):
         get_user_model().objects.select_for_update().get(pk=user.pk)
         profile = get_profile(user)
         profile.delete()
+
+
+def _clean_preferences(values):
+    """Validate shared preference fields, preserving omitted lifestyle choices."""
+    errors = {}
+    location_id = values.get("location_id", "")
+    if isinstance(location_id, bool) or not isinstance(location_id, (int, str)):
+        location_id = 0
+    try:
+        location_id = int(location_id)
+    except (TypeError, ValueError):
+        location_id = 0
+    location = (
+        Location.objects.filter(pk=location_id).first()
+        if 0 < location_id <= 2147483647 else None
+    )
+    if location is None:
+        errors["location_id"] = "Choose a valid location."
+    cleaned = {"location": location}
+    for field, choices, message in (
+        ("budget_range", BudgetRange, "Choose a valid monthly budget."),
+        ("pets_preference", PetsPreference, "Choose a pet preference."),
+        ("sleep_preference", SleepPreference, "Choose a valid sleep preference."),
+        ("party_preference", PartyPreference, "Choose a valid party preference."),
+    ):
+        if field in ("sleep_preference", "party_preference") and field not in values:
+            continue
+        value = values.get(field, "")
+        if value not in choices.values:
+            errors[field] = message
+        else:
+            cleaned[field] = value
+    if errors:
+        raise ValidationError(errors)
+    return cleaned
+
+
+def get_preferences(user):
+    return Preference.objects.select_related("location").get(user=user)
+
+
+def save_preferences(user, values):
+    """Create or replace the current user's preferences without changing their profile."""
+    fields = {"location_id", "budget_range", "pets_preference", "sleep_preference", "party_preference"}
+    if not isinstance(values, dict) or set(values) - fields:
+        raise ValidationError("Only location, budget, pet, sleep and party preferences can be saved.")
+    cleaned = _clean_preferences(values)
+    with transaction.atomic():
+        get_user_model().objects.select_for_update().get(pk=user.pk)
+        preference, _ = Preference.objects.update_or_create(user=user, defaults=cleaned)
+        return preference
+
+
+def search_locations(query):
+    query = query.strip()
+    if len(query) > 100 or "\x00" in query:
+        raise ValidationError("Enter a valid location name of at most 100 characters.")
+    if not query:
+        return Location.objects.none()
+    return Location.objects.filter(city__icontains=query).order_by("city", "state")[:20]
