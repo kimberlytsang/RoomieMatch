@@ -84,6 +84,7 @@ function setupLocationAutocomplete(container) {
 function setupPhotoPreview(form, photo, nameInput) {
   const input = form.querySelector('input[name="profile_picture"]');
   const remove = form.querySelector('input[name="remove_picture"]');
+  const clearButton = form.querySelector("[data-clear-photo]");
   const image = photo.querySelector("img");
   const initial = photo.querySelector("[data-photo-initial]");
   const savedSource = image.getAttribute("src");
@@ -105,8 +106,16 @@ function setupPhotoPreview(form, photo, nameInput) {
   nameInput.addEventListener("input", updateInitial);
   form.addEventListener("reset", () => {
     input.disabled = false;
+    if (clearButton) clearButton.hidden = true;
     restorePhoto();
   });
+  if (clearButton) {
+    clearButton.addEventListener("click", () => {
+      input.value = "";
+      input.dispatchEvent(new Event("change"));
+      input.focus();
+    });
+  }
   if (remove) {
     remove.addEventListener("change", () => {
       restorePhoto();
@@ -121,6 +130,7 @@ function setupPhotoPreview(form, photo, nameInput) {
     restorePhoto();
     updateInitial();
     const file = input.files[0];
+    if (clearButton) clearButton.hidden = !file;
     if (!file) return;
     if (!["image/jpeg", "image/png"].includes(file.type) || !file.size || file.size > 2 * 1024 * 1024) {
       input.setCustomValidity("Choose a non-empty JPEG or PNG image, up to 2 MB.");

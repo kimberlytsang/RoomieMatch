@@ -56,6 +56,7 @@ def test_new_user_can_open_form_and_profile_entry(signed_in, user, details):
     assert b"csrfmiddlewaretoken" in response.content
     assert b'enctype="multipart/form-data"' in response.content
     assert b'name="profile_picture" type="file"' in response.content
+    assert b'type="button" data-clear-photo hidden>Remove Photo</button>' in response.content
     assert b"This preference is not saved" not in response.content
     assert list(response.context["sleep_preferences"]) == list(SleepPreference.choices)
     assert list(response.context["party_preferences"]) == list(PartyPreference.choices)
@@ -65,9 +66,12 @@ def test_new_user_can_open_form_and_profile_entry(signed_in, user, details):
     assert signed_in.get(reverse("my-profile")).url == reverse("create-profile")
 
 
-def test_creation_saves_current_users_profile_and_redirects_to_d1(signed_in, user, details):
+@pytest.mark.parametrize("photo_fields", [{}, {"profile_picture": ""}])
+def test_creation_saves_current_users_profile_and_redirects_to_d1(signed_in, user, details, photo_fields):
     other = User.objects.create_user("other-roomie@example.com", "Correct-Horse-42")
-    response = signed_in.post(reverse("create-profile"), {**details, "user_id": str(other.pk)})
+    response = signed_in.post(reverse("create-profile"), {
+        **details, **photo_fields, "user_id": str(other.pk),
+    })
     assert response.status_code == 302
     assert response.url == reverse("my-profile")
     profile = Profile.objects.get(user=user)

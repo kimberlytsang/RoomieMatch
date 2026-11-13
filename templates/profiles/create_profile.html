@@ -4,7 +4,7 @@
 {% block title %}Create your profile - RoomieMatch{% endblock %}
 
 {% block content %}
-<script src="{% static 'js/profile_forms.js' %}?v=20261112-remove-photo-1"></script>
+<script src="{% static 'js/profile_forms.js' %}?v=20261112-create-remove-photo-1"></script>
 <main class="page-wrap roommate-page create-profile-page">
   <header class="roommate-heading create-profile-heading">
     <p class="eyebrow">Tell us about yourself</p>
@@ -44,6 +44,7 @@
         <label for="profile-picture">Profile photo</label>
         <input id="profile-picture" name="profile_picture" type="file" accept="image/jpeg,image/png" aria-describedby="photo-hint">
         <p class="field-hint" id="photo-hint">Optional. JPEG or PNG, up to 2 MB. Your photo is visible to signed-in roommates.</p>
+        <button class="my-profile-secondary" type="button" data-clear-photo hidden>Remove Photo</button>
       </div>
       <div class="field-group">
         <label for="bio">About me</label>
