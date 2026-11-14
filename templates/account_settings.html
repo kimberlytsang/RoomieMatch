@@ -50,8 +50,25 @@
       </form>
     </section>
 
+    <section class="account-settings-card delete-account-card" aria-labelledby="delete-account-heading">
+      <h2 id="delete-account-heading">Delete Account</h2>
+      <p>Deleting your account is permanent. Your roommate profile, preferences, and conversations will be removed.</p>
+      <button class="button-danger" id="open-delete-account-modal" type="button">Delete Account</button>
+    </section>
   </div>
 </main>
+<dialog class="delete-account-modal" id="delete-account-modal" aria-labelledby="delete-modal-heading" aria-describedby="delete-modal-description">
+  <div class="delete-account-modal-content">
+    <p class="delete-account-warning">This action cannot be undone.</p>
+    <h2 id="delete-modal-heading">Delete your account?</h2>
+    <p id="delete-modal-description">Your account, roommate profile, preferences, and conversations will be permanently deleted.</p>
+    <p class="delete-account-error" id="delete-account-error" role="alert" hidden></p>
+    <div class="delete-account-modal-actions">
+      <button class="button-danger" id="confirm-delete-account" type="button">Delete account</button>
+      <button class="button-secondary" id="keep-account" type="button" autofocus>Keep account</button>
+    </div>
+  </div>
+</dialog>
 <script>
   const changePasswordForm = document.getElementById("change-password-form");
   const passwordFormMessage = document.getElementById("password-form-message");
@@ -108,6 +125,43 @@
       supportFormMessage.classList.add("is-error");
     } finally {
       submitButton.disabled = false;
+  const deleteAccountModal = document.getElementById("delete-account-modal");
+  const openDeleteAccountModal = document.getElementById("open-delete-account-modal");
+  const confirmDeleteAccount = document.getElementById("confirm-delete-account");
+  const keepAccount = document.getElementById("keep-account");
+  const deleteAccountError = document.getElementById("delete-account-error");
+
+  openDeleteAccountModal.addEventListener("click", () => {
+    deleteAccountError.hidden = true;
+    deleteAccountModal.showModal();
+  });
+
+  keepAccount.addEventListener("click", () => deleteAccountModal.close());
+
+  confirmDeleteAccount.addEventListener("click", async () => {
+    confirmDeleteAccount.disabled = true;
+    deleteAccountError.hidden = true;
+    try {
+      const response = await fetch("/api/users/me", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken(),
+        },
+        body: JSON.stringify({ confirmation: true }),
+      });
+      if (response.status === 204) {
+        window.location.href = "/login/";
+        return;
+      }
+      const data = await response.json();
+      deleteAccountError.textContent = data.error || "Could not delete your account. Please try again.";
+      deleteAccountError.hidden = false;
+    } catch (error) {
+      deleteAccountError.textContent = "Could not delete your account. Please check your connection and try again.";
+      deleteAccountError.hidden = false;
+    } finally {
+      confirmDeleteAccount.disabled = false;
     }
   });
 </script>

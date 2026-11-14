@@ -1,10 +1,27 @@
 """HTML views for discovering roommate profiles."""
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.core.exceptions import ValidationError
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_http_methods
 
 from . import services
-from .models import BudgetRange, Location, PetsPreference, Profile
+from .models import (
+    BudgetRange,
+    Location,
+    PartyPreference,
+    PetsPreference,
+    Preference,
+    Profile,
+    SleepPreference,
+)
+
+
+PROFILE_PETS_CHOICES = [
+    (PetsPreference.NO_PREFERENCE, PetsPreference.NO_PREFERENCE.label),
+    (PetsPreference.PET_FRIENDLY, PetsPreference.PET_FRIENDLY.label),
+    (PetsPreference.NO_PETS, PetsPreference.NO_PETS.label),
+]
 
 
 def _selected_filters(request):
@@ -13,10 +30,16 @@ def _selected_filters(request):
     location_id = int(raw_location_id) if raw_location_id.isdigit() else None
     budget_range = request.GET.get("budget", "")
     pets_preference = request.GET.get("pets", "")
+    sleep_preference = request.GET.get("sleep", "")
+    party_preference = request.GET.get("parties", "")
+    name = request.GET.get("name", "")
     return {
         "location": location_id,
         "budget": budget_range if budget_range in BudgetRange.values else "",
         "pets": pets_preference if pets_preference in PetsPreference.values else "",
+        "sleep": sleep_preference if sleep_preference in SleepPreference.values else "",
+        "parties": party_preference if party_preference in PartyPreference.values else "",
+        "name": name,
     }
 
 
@@ -29,6 +52,9 @@ def roommate_list(request):
         location_id=selected_filters["location"],
         budget_range=selected_filters["budget"],
         pets_preference=selected_filters["pets"],
+        sleep_preference=selected_filters["sleep"],
+        party_preference=selected_filters["parties"],
+        name=selected_filters["name"],
     )
     return render(
         request,
@@ -38,8 +64,27 @@ def roommate_list(request):
             "locations": Location.objects.order_by("city", "state"),
             "budget_ranges": BudgetRange.choices,
             "pets_preferences": PetsPreference.choices,
+            # Sleep and party "no preference" values are defaults until profile
+            # management supports choosing them, so do not offer them as filters.
+            "sleep_preferences": [
+                choice for choice in SleepPreference.choices
+                if choice[0] != SleepPreference.NO_PREFERENCE
+            ],
+            "party_preferences": [
+                choice for choice in PartyPreference.choices
+                if choice[0] != PartyPreference.NO_PREFERENCE
+            ],
             "selected_filters": selected_filters,
-            "filters_active": any(selected_filters.values()),
+            "filters_active": any(
+                (
+                    selected_filters["location"],
+                    selected_filters["budget"],
+                    selected_filters["pets"],
+                    selected_filters["sleep"],
+                    selected_filters["parties"],
+                    selected_filters["name"].strip(),
+                )
+            ),
         },
     )
 
@@ -52,3 +97,93 @@ def roommate_detail(request, user_id):
     except Profile.DoesNotExist:
         return render(request, "profiles/roommate_unavailable.html", status=404)
     return render(request, "profiles/roommate_detail.html", {"roommate": roommate})
+
+
+@login_required(login_url="login-page")
+@require_http_methods(["GET", "POST"])
+def my_profile(request):
+    profile = Profile.objects.filter(user=request.user).first()
+    if profile is None:
+        return redirect("create-profile")
+    preference = Preference.objects.filter(
+        user=request.user
+    ).select_related("location").first()
+
+    values = {"display_name": profile.display_name, "bio": profile.bio}
+    errors = {}
+    if request.method == "POST":
+        values = {field: request.POST.get(field, "") for field in values}
+        try:
+            services.update_profile(
+                request.user, values, profile_picture=request.FILES.get("profile_picture"),
+                remove_picture=request.POST.get("remove_picture") == "on",
+            )
+        except ValidationError as exc:
+            errors = exc.message_dict
+        except Profile.DoesNotExist:
+            return redirect("create-profile")
+        else:
+            return redirect("my-profile")
+
+    return render(
+        request,
+        "profiles/my_profile.html",
+        {
+            "profile": profile,
+            "preference": preference,
+            "values": values,
+            "errors": errors,
+            "budget_ranges": BudgetRange.choices,
+            "pets_preferences": PROFILE_PETS_CHOICES,
+            "sleep_preferences": SleepPreference.choices,
+            "party_preferences": PartyPreference.choices,
+        },
+        status=400 if errors else 200,
+    )
+
+
+@login_required(login_url="login-page")
+@require_http_methods(["GET", "POST"])
+def create_profile(request):
+    if Profile.objects.filter(user=request.user).exists():
+        return redirect("my-profile")
+
+    values = {
+        "display_name": "",
+        "bio": "",
+        "location_id": "",
+        "budget_range": BudgetRange.B1001_1500,
+        "pets_preference": "",
+        "sleep_preference": SleepPreference.NO_PREFERENCE,
+        "party_preference": PartyPreference.NO_PREFERENCE,
+    }
+    errors = {}
+    if request.method == "POST":
+        values = {field: request.POST.get(field, "") for field in values}
+        values["sleep_preference"] = request.POST.get("sleep_preference", SleepPreference.NO_PREFERENCE)
+        values["party_preference"] = request.POST.get("party_preference", PartyPreference.NO_PREFERENCE)
+        try:
+            services.create_profile(
+                request.user, **values, profile_picture=request.FILES.get("profile_picture"),
+            )
+        except ValidationError as exc:
+            errors = exc.message_dict
+        except services.ProfileAlreadyExists:
+            return redirect("my-profile")
+        else:
+            return redirect("my-profile")
+
+    return render(
+        request,
+        "profiles/create_profile.html",
+        {
+            "values": values,
+            "errors": errors,
+            "location_name": request.POST.get("location_name", ""),
+            "budget_ranges": BudgetRange.choices,
+            "pets_preferences": PROFILE_PETS_CHOICES,
+            "sleep_preferences": SleepPreference.choices,
+            "party_preferences": PartyPreference.choices,
+        },
+        status=400 if errors else 200,
+    )
