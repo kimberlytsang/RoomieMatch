@@ -43,6 +43,7 @@
       {% if user.is_authenticated %}
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="{% url 'roommate-list' %}">Find roommates</a>
+          <a href="{% url 'conversation-list' %}">Chats</a>
         </nav>
       {% endif %}
       <div class="header-action">

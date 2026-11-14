@@ -370,6 +370,29 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .roommate-profile-facts div { display: grid; grid-template-columns: minmax(120px, .9fr) minmax(0, 1.3fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid #f5dfd8; }
 .roommate-profile-facts dt { color: #6a5147; font-size: 13px; font-weight: 700; }
 .roommate-profile-facts dd { margin: 0; color: #3f231a; font-size: 13px; }
+.send-message-form { display: grid; gap: 10px; margin-top: 24px; }
+.send-message-form label { color: #3f231a; font-size: 15px; font-weight: 700; }
+.send-message-form textarea { min-height: 94px; padding: 12px; border: 1px solid #f2b9aa; border-radius: 5px; color: var(--text); font: inherit; resize: vertical; }
+.send-message-form .button-primary { justify-self: start; }
+.conversations-heading { margin-bottom: 28px; }
+.conversations-heading h1, .conversation-detail h1 { margin-bottom: 8px; font-size: clamp(36px, 5vw, 52px); }
+.conversations-heading > p:last-child { color: #806d66; }
+.conversation-list { display: grid; gap: 12px; max-width: 760px; }
+.conversation-list-item { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 16px; border: 1px solid #f2d4ca; border-radius: 7px; color: var(--text); background: var(--paper); text-decoration: none; }
+.conversation-list-item:hover, .conversation-list-item:focus-visible { border-color: var(--coral); box-shadow: 0 6px 16px rgba(9, 10, 20, .08); }
+.conversation-list-item strong, .conversation-list-item small { display: block; }
+.conversation-list-item small { margin-top: 3px; color: #806d66; }
+.conversation-avatar { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #ff8f82, #6d71aa); font-weight: 700; }
+.conversation-open { color: #c94f45; font-size: 13px; font-weight: 700; }
+.empty-conversations { max-width: 620px; margin: 80px auto; padding: 42px 28px; border: 1px dashed #eabfb1; border-radius: 7px; text-align: center; }
+.empty-conversations h1, .empty-conversations h2 { margin-bottom: 8px; }
+.empty-conversations p { margin-bottom: 22px; color: #806d66; }
+.conversation-detail { max-width: 760px; padding: 34px; border-radius: 7px; background: var(--paper); box-shadow: 0 16px 32px rgba(9, 10, 20, .1); }
+.message-thread { display: grid; gap: 12px; margin-top: 26px; }
+.message-bubble { max-width: 78%; padding: 12px 14px; border: 1px solid #ecdcd6; border-radius: 10px; background: #fff; }
+.message-bubble-sent { justify-self: end; border-color: #f6afa1; background: #fff0ec; }
+.message-bubble p, .message-bubble small { margin: 0; }
+.message-bubble small { display: block; margin-top: 7px; color: #806d66; font-size: 11px; }
 .roommate-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 22px 0 0; }
 .roommate-facts div { padding: 12px; border-radius: 4px; background: #fff4f0; }
 .roommate-facts dt { margin-bottom: 3px; color: #8b8382; font-size: 10px; font-weight: 700; text-transform: uppercase; }

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Chat with {{ other_name }} - RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page conversation-detail-page">
+  <a class="back-link" href="{% url 'conversation-list' %}">← Back to chats</a>
+  <section class="conversation-detail" aria-labelledby="conversation-title">
+    <p class="eyebrow">Conversation</p>
+    <h1 id="conversation-title">{{ other_name }}</h1>
+    <div class="message-thread" aria-label="Messages with {{ other_name }}">
+      {% for message in messages %}
+        <article class="message-bubble{% if message.sender_id == request.user.user_id %} message-bubble-sent{% endif %}">
+          <p>{{ message.body }}</p>
+          <small>{% if message.sender_id == request.user.user_id %}You{% else %}{{ other_name }}{% endif %} · {{ message.sent_at|date:"M j, Y g:i A" }}</small>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}

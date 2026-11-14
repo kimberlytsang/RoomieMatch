@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Chats - RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page conversations-page">
+  <section class="conversations-heading">
+    <p class="eyebrow">Chats</p>
+    <h1>Your conversations</h1>
+    <p>Read your messages and continue conversations with potential roommates.</p>
+  </section>
+
+  {% if conversations %}
+    <section class="conversation-list" aria-label="Your conversations">
+      {% for conversation in conversations %}
+        <a class="conversation-list-item" href="{% url 'conversation-detail' conversation.conversation_id %}">
+          <span class="conversation-avatar" aria-hidden="true">{{ conversation.other_name|first|upper }}</span>
+          <span>
+            <strong>{{ conversation.other_name }}</strong>
+            <small>{{ conversation.other_user.email }}</small>
+          </span>
+          <span class="conversation-open">Open conversation →</span>
+        </a>
+      {% endfor %}
+    </section>
+  {% else %}
+    <section class="empty-conversations" aria-labelledby="empty-conversations-title">
+      <h2 id="empty-conversations-title">No conversations yet</h2>
+      <p>Browse roommate profiles and send a message to start a conversation.</p>
+      <a class="button-primary" href="{% url 'roommate-list' %}">Find roommates</a>
+    </section>
+  {% endif %}
+</main>
+{% endblock %}

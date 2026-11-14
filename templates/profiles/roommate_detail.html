@@ -17,6 +17,13 @@
         <div><dt>Location</dt><dd>{{ roommate.user.preference.location }}</dd></div>
         <div><dt>Home preferences</dt><dd>{{ roommate.user.preference.get_sleep_preference_display }} · {{ roommate.user.preference.get_pets_preference_display }} · {{ roommate.user.preference.get_party_preference_display }}</dd></div>
       </dl>
+      <form class="send-message-form" method="post" action="{% url 'send-message' roommate.user_id %}">
+        {% csrf_token %}
+        <label for="message-body">Send a message</label>
+        <textarea id="message-body" name="body" rows="4" maxlength="2000" placeholder="Write a message to {{ roommate.display_name }}...">{{ message_body }}</textarea>
+        {% if message_error %}<p class="form-message" role="alert">{{ message_error }}</p>{% endif %}
+        <button class="button-primary" type="submit">Send message</button>
+      </form>
     </div>
   </article>
 </main>
