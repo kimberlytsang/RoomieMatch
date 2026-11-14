@@ -54,7 +54,7 @@ def test_empty_request(client, db):
         content_type='application/json'
     )
 
-    assert response.status_code == 500
+    assert response.status_code == 400
 
 def test_unauthenticated_support_form(client):
     response = client.post(
