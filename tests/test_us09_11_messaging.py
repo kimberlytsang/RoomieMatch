@@ -47,6 +47,15 @@ def test_signed_in_user_can_send_message_from_roommate_profile(client, users):
     assert message.body == "Hi Maya!"
 
 
+def test_message_modal_starts_with_an_editable_greeting(client, users):
+    client.force_login(users["alex"])
+
+    response = client.get(f"/roommates/{users['maya'].user_id}/")
+
+    assert response.status_code == 200
+    assert b"Hi Maya! I am looking for a place in New York too. Want to chat?" in response.content
+
+
 def test_empty_message_shows_error_and_is_not_saved(client, users):
     client.force_login(users["alex"])
 
@@ -77,13 +86,42 @@ def test_conversation_list_and_detail_show_persisted_messages(client, users):
     assert b"Hi Alex!" in detail_response.content
 
 
+def test_user_can_reply_from_an_existing_conversation(client, users):
+    conversation, _ = messaging_services.send_message(
+        users["maya"], users["alex"], "Hi Alex!"
+    )
+    client.force_login(users["alex"])
+
+    response = client.post(
+        f"/conversations/{conversation.conversation_id}/", {"body": "Nice to meet you!"}
+    )
+
+    assert response.status_code == 302
+    assert Message.objects.filter(
+        conversation=conversation, sender=users["alex"], body="Nice to meet you!"
+    ).exists()
+
+
+def test_empty_reply_shows_message_prompt_and_is_not_saved(client, users):
+    conversation, _ = messaging_services.send_message(
+        users["maya"], users["alex"], "Hi Alex!"
+    )
+    client.force_login(users["alex"])
+
+    response = client.post(f"/conversations/{conversation.conversation_id}/", {"body": "  "})
+
+    assert response.status_code == 400
+    assert b"Write a message first" in response.content
+    assert Message.objects.filter(conversation=conversation).count() == 1
+
+
 def test_no_conversations_shows_empty_state(client, users):
     client.force_login(users["alex"])
 
     response = client.get("/conversations/")
 
     assert response.status_code == 200
-    assert b"No conversations yet" in response.content
+    assert b"You have no chats yet" in response.content
 
 
 def test_conversations_persist_for_a_new_logged_in_session(users):

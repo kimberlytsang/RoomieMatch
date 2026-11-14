@@ -370,29 +370,60 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .roommate-profile-facts div { display: grid; grid-template-columns: minmax(120px, .9fr) minmax(0, 1.3fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid #f5dfd8; }
 .roommate-profile-facts dt { color: #6a5147; font-size: 13px; font-weight: 700; }
 .roommate-profile-facts dd { margin: 0; color: #3f231a; font-size: 13px; }
-.send-message-form { display: grid; gap: 10px; margin-top: 24px; }
-.send-message-form label { color: #3f231a; font-size: 15px; font-weight: 700; }
-.send-message-form textarea { min-height: 94px; padding: 12px; border: 1px solid #f2b9aa; border-radius: 5px; color: var(--text); font: inherit; resize: vertical; }
-.send-message-form .button-primary { justify-self: start; }
-.conversations-heading { margin-bottom: 28px; }
-.conversations-heading h1, .conversation-detail h1 { margin-bottom: 8px; font-size: clamp(36px, 5vw, 52px); }
-.conversations-heading > p:last-child { color: #806d66; }
-.conversation-list { display: grid; gap: 12px; max-width: 760px; }
-.conversation-list-item { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 16px; border: 1px solid #f2d4ca; border-radius: 7px; color: var(--text); background: var(--paper); text-decoration: none; }
-.conversation-list-item:hover, .conversation-list-item:focus-visible { border-color: var(--coral); box-shadow: 0 6px 16px rgba(9, 10, 20, .08); }
-.conversation-list-item strong, .conversation-list-item small { display: block; }
-.conversation-list-item small { margin-top: 3px; color: #806d66; }
+.send-message-launch { margin-top: 24px; }
+.send-message-launch .button-primary { min-width: 190px; }
+.send-message-launch p { margin: 5px 0 0; color: #806d66; font-size: 11px; }
+.message-compose-modal { width: min(100% - 36px, 560px); padding: 0; border: 0; border-radius: 7px; color: #3f231a; background: #fffdfb; box-shadow: 0 24px 70px rgba(9, 10, 20, .3); }
+.message-compose-modal::backdrop { background: rgba(32, 33, 54, .55); }
+.message-compose-modal form { display: grid; gap: 12px; padding: 42px 34px 34px; }
+.message-compose-modal .eyebrow { margin: 0; text-align: center; }
+.message-compose-modal h2 { margin: -8px 0 10px; font-size: 30px; text-align: center; }
+.message-compose-modal label { color: #3f231a; font-size: 12px; font-weight: 700; }
+.message-compose-modal textarea { display: block; width: 100%; min-height: 112px; padding: 12px; border: 1px solid #f2b9aa; border-radius: 5px; color: #3f231a; background: #fff; color-scheme: light; font: inherit; resize: vertical; }
+.message-compose-modal textarea::placeholder { color: #806d66; opacity: 1; }
+.message-compose-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 2px; }
+.message-compose-actions .button-primary, .message-compose-actions .button-secondary { width: 100%; }
 .conversation-avatar { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #ff8f82, #6d71aa); font-weight: 700; }
-.conversation-open { color: #c94f45; font-size: 13px; font-weight: 700; }
-.empty-conversations { max-width: 620px; margin: 80px auto; padding: 42px 28px; border: 1px dashed #eabfb1; border-radius: 7px; text-align: center; }
+.empty-conversations { display: grid; min-height: calc(100vh - 250px); place-content: center; max-width: 620px; margin: 0 auto; padding: 42px 28px; text-align: center; }
 .empty-conversations h1, .empty-conversations h2 { margin-bottom: 8px; }
 .empty-conversations p { margin-bottom: 22px; color: #806d66; }
-.conversation-detail { max-width: 760px; padding: 34px; border-radius: 7px; background: var(--paper); box-shadow: 0 16px 32px rgba(9, 10, 20, .1); }
-.message-thread { display: grid; gap: 12px; margin-top: 26px; }
-.message-bubble { max-width: 78%; padding: 12px 14px; border: 1px solid #ecdcd6; border-radius: 10px; background: #fff; }
-.message-bubble-sent { justify-self: end; border-color: #f6afa1; background: #fff0ec; }
+.chat-layout { display: grid; grid-template-columns: minmax(180px, .29fr) minmax(0, 1fr); min-height: calc(100vh - 150px); border: 1px solid #f3d4c8; background: rgba(255, 253, 251, .28); }
+.chat-sidebar { display: flex; flex-direction: column; min-width: 0; padding: 26px 18px; border-right: 1px solid #f3d4c8; }
+.chat-sidebar h1 { margin-bottom: 18px; font-size: 18px; }
+.chat-list { display: grid; gap: 9px; }
+.chat-list-item { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px; border-radius: 4px; color: #3f231a; text-decoration: none; }
+.chat-list-item:hover, .chat-list-item:focus-visible, .chat-list-item.is-active { background: #fff; box-shadow: 0 4px 12px rgba(76, 41, 27, .06); }
+.chat-list-item .conversation-avatar { width: 34px; height: 34px; font-size: 12px; }
+.chat-list-copy { min-width: 0; }
+.chat-list-copy strong, .chat-list-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-list-copy strong { font-size: 12px; }
+.chat-list-copy small, .chat-find-link { color: #806d66; font-size: 10px; }
+.chat-find-link { margin-top: 20px; text-decoration: none; }
+.chat-find-link:hover, .chat-find-link:focus-visible { color: #c94f45; text-decoration: underline; }
+.chat-main { display: grid; min-width: 0; grid-template-rows: auto minmax(350px, 1fr) auto; }
+.chat-main-header { display: flex; align-items: center; gap: 12px; padding: 18px 24px; border-bottom: 1px solid #f3d4c8; }
+.chat-main-header .conversation-avatar { width: 34px; height: 34px; font-size: 12px; }
+.chat-main-header h2 { margin: 0; font-size: 18px; }
+.chat-main-header a { display: inline-block; color: var(--coral); font-size: 10px; text-decoration: none; }
+.chat-main-header a:hover, .chat-main-header a:focus-visible { text-decoration: underline; }
+.message-thread { display: grid; align-content: start; gap: 12px; min-height: 0; padding: 18px 24px; overflow: auto; }
+.message-day { grid-column: 1 / -1; margin: 0 0 4px; color: #806d66; font-size: 10px; text-align: center; }
+.message-bubble { max-width: min(78%, 560px); padding: 11px 13px; border-radius: 4px; background: #fff; }
+.message-bubble-sent { justify-self: end; color: #fff; background: #f36c5b; }
 .message-bubble p, .message-bubble small { margin: 0; }
-.message-bubble small { display: block; margin-top: 7px; color: #806d66; font-size: 11px; }
+.message-bubble small { display: block; margin-top: 7px; color: #806d66; font-size: 10px; }
+.message-bubble-sent small { color: #fff6f2; text-align: right; }
+.chat-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; align-items: end; padding: 14px 24px; border-top: 1px solid #f3d4c8; }
+.chat-composer label { grid-column: 1 / -1; color: #3f231a; font-size: 11px; font-weight: 700; }
+.chat-composer textarea { display: block; width: 100%; min-height: 70px; padding: 11px 12px; border: 1px solid #f2b9aa; border-radius: 4px; color: #3f231a; background: #fff; color-scheme: light; font: inherit; font-size: 12px; resize: vertical; }
+.chat-composer textarea::placeholder { color: #806d66; opacity: 1; }
+.chat-composer .button-primary { min-width: 96px; min-height: 42px; }
+.message-error-modal { width: min(100% - 36px, 480px); padding: 0; border: 0; border-radius: 7px; color: #3f231a; background: #fffdfb; box-shadow: 0 24px 70px rgba(9, 10, 20, .3); text-align: center; }
+.message-error-modal::backdrop { background: rgba(32, 33, 54, .55); }
+.message-error-modal > div { padding: 40px 36px; }
+.message-error-modal h2 { margin: 0 0 8px; font-size: 28px; }
+.message-error-modal p:not(.eyebrow) { margin-bottom: 24px; color: #806d66; }
+.message-error-modal .button-primary { min-width: 170px; }
 .roommate-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 22px 0 0; }
 .roommate-facts div { padding: 12px; border-radius: 4px; background: #fff4f0; }
 .roommate-facts dt { margin-bottom: 3px; color: #8b8382; font-size: 10px; font-weight: 700; text-transform: uppercase; }
@@ -466,6 +497,17 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
   .roommate-avatar-large { width: min(100%, 260px); }
   .roommate-profile-facts div { grid-template-columns: 1fr; gap: 3px; }
   .roommate-facts { grid-template-columns: 1fr; }
+  .conversation-detail-page { padding-right: 0; padding-left: 0; }
+  .chat-layout { grid-template-columns: 1fr; }
+  .chat-sidebar { padding: 18px; border-right: 0; border-bottom: 1px solid #f3d4c8; }
+  .chat-sidebar h1 { margin-bottom: 10px; }
+  .chat-list { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .chat-find-link { margin-top: 12px; }
+  .chat-main { grid-template-rows: auto minmax(320px, 1fr) auto; }
+  .chat-main-header, .message-thread, .chat-composer { padding-right: 18px; padding-left: 18px; }
+  .message-bubble { max-width: 90%; }
+  .chat-composer { grid-template-columns: 1fr; }
+  .chat-composer .button-primary { width: 100%; }
   .account-settings-layout { grid-template-columns: 1fr; }
   .account-settings-card { padding: 20px; }
   .delete-account-modal-content { padding: 24px; }

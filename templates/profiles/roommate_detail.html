@@ -17,14 +17,37 @@
         <div><dt>Location</dt><dd>{{ roommate.user.preference.location }}</dd></div>
         <div><dt>Home preferences</dt><dd>{{ roommate.user.preference.get_sleep_preference_display }} · {{ roommate.user.preference.get_pets_preference_display }} · {{ roommate.user.preference.get_party_preference_display }}</dd></div>
       </dl>
-      <form class="send-message-form" method="post" action="{% url 'send-message' roommate.user_id %}">
-        {% csrf_token %}
-        <label for="message-body">Send a message</label>
-        <textarea id="message-body" name="body" rows="4" maxlength="2000" placeholder="Write a message to {{ roommate.display_name }}...">{{ message_body }}</textarea>
-        {% if message_error %}<p class="form-message" role="alert">{{ message_error }}</p>{% endif %}
-        <button class="button-primary" type="submit">Send message</button>
-      </form>
+      <div class="send-message-launch">
+        <button class="button-primary" type="button" data-open-message-modal>Send a message</button>
+        <p>Send a message to see if you would be good roommates.</p>
+      </div>
     </div>
   </article>
 </main>
+
+<dialog class="message-compose-modal" id="message-compose-modal" aria-labelledby="message-compose-title">
+  <form method="post" action="{% url 'send-message' roommate.user_id %}">
+    {% csrf_token %}
+    <p class="eyebrow">New chat</p>
+    <h2 id="message-compose-title">Meet {{ roommate.display_name }}</h2>
+    <label for="message-body">Message</label>
+    <textarea id="message-body" name="body" rows="4" maxlength="2000" placeholder="Write a message to {{ roommate.display_name }}...">{% if message_attempted %}{{ message_body }}{% else %}Hi {{ roommate.display_name }}! I am looking for a place in New York too. Want to chat?{% endif %}</textarea>
+    {% if message_error %}<p class="form-message" role="alert">{{ message_error }}</p>{% endif %}
+    <div class="message-compose-actions">
+      <button class="button-primary" type="submit">Send message</button>
+      <button class="button-secondary" type="button" data-close-message-modal>Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  const messageComposeModal = document.getElementById("message-compose-modal");
+  const openMessageModal = () => {
+    if (!messageComposeModal.open) messageComposeModal.showModal();
+    document.getElementById("message-body").focus();
+  };
+  document.querySelector("[data-open-message-modal]").addEventListener("click", openMessageModal);
+  document.querySelector("[data-close-message-modal]").addEventListener("click", () => messageComposeModal.close());
+  {% if message_error %}openMessageModal();{% endif %}
+</script>
 {% endblock %}
