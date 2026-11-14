@@ -17,7 +17,21 @@ class BudgetRange(models.TextChoices):
 class PetsPreference(models.TextChoices):
     PET_FRIENDLY = "PET_FRIENDLY", "Pet friendly"
     NO_PETS = "NO_PETS", "No pets"
-    NO_PREFERENCE = "NO_PREFERENCE", "No preference"
+    NO_PREFERENCE = "NO_PREFERENCE", "No preference with pets"
+
+
+class SleepPreference(models.TextChoices):
+    NO_PREFERENCE = "NO_PREFERENCE", "No preference with sleep"
+    EARLY = "EARLY", "Sleep early"
+    LATE = "LATE", "Sleep late"
+    VARIES = "VARIES", "Sleep time varies"
+
+
+class PartyPreference(models.TextChoices):
+    NO_PREFERENCE = "NO_PREFERENCE", "No preference with parties"
+    NO_PARTIES = "NO_PARTIES", "No parties"
+    SOMETIMES = "SOMETIMES", "Parties sometimes"
+    OFTEN = "OFTEN", "Parties often"
 
 
 class Location(models.Model):
@@ -47,6 +61,16 @@ class Preference(models.Model):
     location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="preferences")
     budget_range = models.CharField(max_length=20, choices=BudgetRange.choices)
     pets_preference = models.CharField(max_length=20, choices=PetsPreference.choices)
+    sleep_preference = models.CharField(
+        max_length=20,
+        choices=SleepPreference.choices,
+        default=SleepPreference.NO_PREFERENCE,
+    )
+    party_preference = models.CharField(
+        max_length=20,
+        choices=PartyPreference.choices,
+        default=PartyPreference.NO_PREFERENCE,
+    )
 
     class Meta:
         db_table = "preferences"

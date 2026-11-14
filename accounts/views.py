@@ -3,7 +3,7 @@ Business rules live in services.py, not here."""
 import json
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 
 from config.api import BadRequest, authenticated_only, error, json_body
 
@@ -124,3 +124,18 @@ def support_request(request):
     except:
         return error(400, "Invalid input.")
     return JsonResponse({"message": "Support request successfully submitted."}, status=201)
+
+@require_http_methods(["DELETE"])
+@authenticated_only
+def delete_account(request):
+    """DELETE /api/users/me (US-14). Requires {"confirmation": true}; returns 204."""
+    try:
+        data = json_body(request)
+    except BadRequest as exc:
+        return error(400, str(exc))
+    if data.get("confirmation") is not True:
+        return error(400, "Account deletion confirmation is required.")
+
+    services.delete_account(request.user)
+    logout(request)
+    return HttpResponse(status=204)
