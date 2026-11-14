@@ -94,7 +94,13 @@ def change_password(user, current_password, new_password):
 
 def submit_support_request(user,subject,body):
     """US-18: Create the support request entry in the db. Not going to worry about duplicates for now."""
-    SupportRequest.objects.create(user=user, subject=subject, body=body)
+    SupportRequest.objects.create(user=user, subject=subject, body=body, status="NEW")
+
+
+def get_support_requests():
+    return SupportRequest.objects.order_by("id")
+
+
 def delete_account(user):
     """US-14: permanently delete a user and their cascading related records."""
     with transaction.atomic():

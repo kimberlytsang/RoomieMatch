@@ -55,6 +55,9 @@
             <div class="account-menu-panel" id="account-menu" hidden>
               <a href="{% url 'my-profile' %}">My profile</a>
               <a href="{% url 'account-settings' %}">Account settings</a>
+              {% if user.is_admin %}
+                <a href="{% url 'app-admin' %}">Admin</a>
+              {% endif %}
               <button type="button" data-logout>Log out</button>
             </div>
           </div>
