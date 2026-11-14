@@ -45,6 +45,17 @@ def test_malformed_support_form(client, db):
     assert b"Subject and Body are required." in response.content
     assert SupportRequest.objects.count() == row_count
 
+def test_empty_request(client, db):
+    user = User.objects.create_user("roomie@example.com", "Correct-Horse-42")
+    client.force_login(user)
+    response = client.post(
+        "/api/auth/support",
+        data = {},
+        content_type='application/json'
+    )
+
+    assert response.status_code == 500
+
 def test_unauthenticated_support_form(client):
     response = client.post(
         "/api/auth/support",

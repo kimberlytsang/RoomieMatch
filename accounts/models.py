@@ -68,8 +68,8 @@ class Session(models.Model):
         indexes = [models.Index(fields=["expires_at"])]
 
 class SupportRequest(models.Model):
-    subject = models.CharField(max_length=100)
-    body = models.CharField(max_length=1000)
+    subject = models.CharField(max_length=200)
+    body = models.CharField(max_length=5000)
     user = models.CharField(max_length=100)
 
     def __str__(self):
