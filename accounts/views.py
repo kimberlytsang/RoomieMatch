@@ -1,5 +1,6 @@
 """View layer: parse the request, enforce permissions, call services, return JSON.
 Business rules live in services.py, not here."""
+import json
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
@@ -103,6 +104,26 @@ def change_password(request):
     update_session_auth_hash(request, request.user)
     return JsonResponse({"message": "Password updated successfully."})
 
+@require_POST
+@authenticated_only
+def support_request(request):
+    """POST /api/auth/support (US-18). Authenticated. 201, 400, 401"""
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError as exc:
+        return error(400, str(exc))
+    user = request.user.email
+    subject = data.get('subject')
+    body = data.get('body')
+    if not all(isinstance(value, str) and value for value in (
+        subject, body
+    )):
+        return error(400, "Subject and Body are required.")
+    try: 
+        services.submit_support_request(user,subject,body)
+    except:
+        return error(400, "Invalid input.")
+    return JsonResponse({"message": "Support request successfully submitted."}, status=201)
 
 @require_http_methods(["DELETE"])
 @authenticated_only
