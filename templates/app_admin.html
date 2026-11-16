@@ -26,11 +26,32 @@ RoomieMatch{% endblock %} {% block content %}
             {{ req.created_at|timezone:"America/New_York"|date:"M d, Y, g:i A"}}
           </td>
           <td>
-            <div class="support-status-form" data-action="{% url 'support-request-status' req.id %}">
-              <label class="visually-hidden" for="status-{{ req.id }}">Status for request {{ req.id }}</label>
-              <select id="status-{{ req.id }}" name="status" data-saved-status="{{ req.status }}">
+            <div
+              class="support-status-form"
+              data-action="{% url 'support-request-status' req.id %}"
+            >
+              <label class="visually-hidden" for="status-{{ req.id }}"
+                >Status for request {{ req.id }}</label
+              >
+              <select
+                id="status-{{ req.id }}"
+                name="status"
+                data-saved-status="{{ req.status }}"
+              >
                 {% for value, label in status_choices %}
-                <option value="{{ value }}"{% if req.status == value %} selected{% endif %}>{{ label }}</option>
+                <option
+                  value="{{ value }}"
+                  {%
+                  if
+                  req.status=""
+                  ="value"
+                  %}
+                  selected{%
+                  endif
+                  %}
+                >
+                  {{ label }}
+                </option>
                 {% endfor %}
               </select>
             </div>
@@ -46,7 +67,9 @@ RoomieMatch{% endblock %} {% block content %}
   </div>
   <div class="support-status-actions">
     <p id="support-status-feedback" role="status" aria-live="polite"></p>
-    <button id="save-support-statuses" type="button" disabled>Save Changes</button>
+    <button id="save-support-statuses" type="button" disabled>
+      Save Changes
+    </button>
   </div>
 </main>
 
@@ -130,9 +153,13 @@ RoomieMatch{% endblock %} {% block content %}
   }
 </style>
 <script>
-  const supportStatusRows = Array.from(document.querySelectorAll(".support-status-form"));
+  const supportStatusRows = Array.from(
+    document.querySelectorAll(".support-status-form"),
+  );
   const saveSupportStatuses = document.getElementById("save-support-statuses");
-  const supportStatusFeedback = document.getElementById("support-status-feedback");
+  const supportStatusFeedback = document.getElementById(
+    "support-status-feedback",
+  );
 
   function changedSupportStatusRows() {
     return supportStatusRows.filter((row) => {
@@ -163,19 +190,23 @@ RoomieMatch{% endblock %} {% block content %}
     });
     supportStatusFeedback.textContent = "Saving changes…";
 
-    const results = await Promise.all(changedRows.map(async (row) => {
-      const select = row.querySelector("select");
-      try {
-        const response = await postJson(row.dataset.action, { status: select.value });
-        if (response.status === 200) {
-          select.dataset.savedStatus = select.value;
-          return true;
+    const results = await Promise.all(
+      changedRows.map(async (row) => {
+        const select = row.querySelector("select");
+        try {
+          const response = await postJson(row.dataset.action, {
+            status: select.value,
+          });
+          if (response.status === 200) {
+            select.dataset.savedStatus = select.value;
+            return true;
+          }
+        } catch (error) {
+          // Keep this row dirty so its selected value can be retried.
         }
-      } catch (error) {
-        // Keep this row dirty so its selected value can be retried.
-      }
-      return false;
-    }));
+        return false;
+      }),
+    );
 
     supportStatusRows.forEach((row) => {
       row.querySelector("select").disabled = false;
@@ -185,8 +216,7 @@ RoomieMatch{% endblock %} {% block content %}
     if (failedCount === 0) {
       supportStatusFeedback.textContent = `Saved ${savedCount} status change${savedCount === 1 ? "" : "s"}.`;
     } else if (savedCount > 0) {
-      supportStatusFeedback.textContent =
-        `Saved ${savedCount} change${savedCount === 1 ? "" : "s"}; ${failedCount} could not be saved. Unsuccessful selections are preserved.`;
+      supportStatusFeedback.textContent = `Saved ${savedCount} change${savedCount === 1 ? "" : "s"}; ${failedCount} could not be saved. Unsuccessful selections are preserved.`;
     } else {
       supportStatusFeedback.textContent =
         "Could not save changes. Your selections are preserved; please try again.";
