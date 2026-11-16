@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
 
-from .models import User,SupportRequest
+from .models import SupportRequest, SupportRequestStatus, User
 
 MAX_PASSWORD_LENGTH = 128
 
@@ -94,11 +94,34 @@ def change_password(user, current_password, new_password):
 
 def submit_support_request(user,subject,body):
     """US-18: Create the support request entry in the db. Not going to worry about duplicates for now."""
-    SupportRequest.objects.create(user=user, subject=subject, body=body, status="NEW")
+    SupportRequest.objects.create(
+        user=user, subject=subject, body=body, status=SupportRequestStatus.OPEN
+    )
 
 
 def get_support_requests():
     return SupportRequest.objects.order_by("id")
+
+
+class SupportRequestNotFound(Exception):
+    pass
+
+
+class InvalidSupportRequestStatus(Exception):
+    pass
+
+
+def update_support_request_status(request_id, status):
+    """US-20: validate and persist a support request status."""
+    if status not in SupportRequestStatus.values:
+        raise InvalidSupportRequestStatus
+    try:
+        support_request = SupportRequest.objects.get(pk=request_id)
+    except SupportRequest.DoesNotExist as exc:
+        raise SupportRequestNotFound from exc
+    support_request.status = status
+    support_request.save(update_fields=["status"])
+    return support_request
 
 
 def delete_account(user):

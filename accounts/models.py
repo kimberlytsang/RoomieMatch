@@ -10,6 +10,12 @@ class Role(models.TextChoices):
     ADMIN = "ADMIN", "App Administrator"
 
 
+class SupportRequestStatus(models.TextChoices):
+    OPEN = "OPEN", "Open"
+    IN_PROGRESS = "IN_PROGRESS", "In progress"
+    RESOLVED = "RESOLVED", "Resolved"
+
+
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
@@ -72,7 +78,9 @@ class SupportRequest(models.Model):
     body = models.CharField(max_length=5000)
     user = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=100)
+    status = models.CharField(
+        max_length=20, choices=SupportRequestStatus.choices, default=SupportRequestStatus.OPEN
+    )
 
     def __str__(self):
         return self.subject

@@ -26,6 +26,7 @@ def test_fully_formed_support_form(client, db):
     assert response.status_code == 201
     assert b"Support request successfully submitted." in response.content
     assert SupportRequest.objects.count() == row_count + 1
+    assert SupportRequest.objects.latest("id").status == "OPEN"
 
 
 def test_malformed_support_form(client, db):
