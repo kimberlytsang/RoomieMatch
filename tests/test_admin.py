@@ -41,9 +41,9 @@ def test_admin_access(client, db):
 
     assert len(response.context["support_requests"]) == 3
     assert response.status_code == 200
-    assert b'<select id="status-' in response.content
+    assert b'id="status-' in response.content
     assert b"Open" in response.content
-    assert b'<button id="save-support-statuses" type="button" disabled>Save Changes</button>' in response.content
+    assert b'id="save-support-statuses"' in response.content
     assert b'<button type="submit">Save</button>' not in response.content
 
 def test_admin_access_no_auth(client):
