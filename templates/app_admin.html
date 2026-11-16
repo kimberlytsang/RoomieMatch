@@ -39,19 +39,7 @@ RoomieMatch{% endblock %} {% block content %}
                 data-saved-status="{{ req.status }}"
               >
                 {% for value, label in status_choices %}
-                <option
-                  value="{{ value }}"
-                  {%
-                  if
-                  req.status=""
-                  ="value"
-                  %}
-                  selected{%
-                  endif
-                  %}
-                >
-                  {{ label }}
-                </option>
+                    <option value="{{ value }}" {% if req.status == value %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
               </select>
             </div>
