@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load tz %}
+
 {% block title %}User Support Requests · RoomieMatch{% endblock %}
 
 {% block content %}
@@ -25,7 +27,7 @@
             <td>{{ req.user }}</td>
             <td>{{ req.subject }}</td>
             <td>{{ req.body|linebreaksbr }}</td>
-            <td>{{ req.created_at }}</td>
+            <td>{{ req.created_at|timezone:"America/New_York"|date:"M d, Y, g:i A" }}</td>
             <td>{{ req.status }}</td>
           </tr>
         {% empty %}
