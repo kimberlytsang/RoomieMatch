@@ -10,5 +10,10 @@ urlpatterns = [
     path("auth/logout", views.logout_view, name="auth-logout"),  # US-03
     path("auth/password/change", views.change_password, name="auth-password-change"),
     path("auth/support", views.support_request, name="support-request"),
+    path(
+        "auth/support/<int:request_id>/status",
+        views.update_support_request_status,
+        name="support-request-status",
+    ),
     path("users/me", views.delete_account, name="user-delete"),
 ]

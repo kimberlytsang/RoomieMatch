@@ -8,6 +8,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from config.api import BadRequest, authenticated_only, error, json_body
 
 from . import services
+from .models import SupportRequestStatus
 
 
 def _credentials(request, *, list_missing_fields=False):
@@ -124,6 +125,27 @@ def support_request(request):
     except:
         return error(400, "Invalid input.")
     return JsonResponse({"message": "Support request successfully submitted."}, status=201)
+
+
+@require_POST
+@authenticated_only
+def update_support_request_status(request, request_id):
+    """POST /api/auth/support/<id>/status (US-20). ADMIN only."""
+    if not request.user.is_admin:
+        return error(403, "Administrator access required.")
+    try:
+        data = json_body(request)
+    except BadRequest as exc:
+        return error(400, str(exc))
+    status = data.get("status")
+    if not isinstance(status, str) or status not in SupportRequestStatus.values:
+        return error(400, "Invalid support request status.")
+    try:
+        services.update_support_request_status(request_id, status)
+    except services.SupportRequestNotFound:
+        return error(404, "Support request not found.")
+    return JsonResponse({"message": "Support request status updated.", "status": status})
+
 
 @require_http_methods(["DELETE"])
 @authenticated_only
