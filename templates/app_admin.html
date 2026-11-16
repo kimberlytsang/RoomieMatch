@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% load tz %}
+
+{% block title %}User Support Requests · RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="admin-page">
+  <h1 id="support-requests-heading">User Support Requests</h1>
+
+  <div class="table-scroll">
+    <table class="admin-table" aria-labelledby="support-requests-heading">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">User</th>
+          <th scope="col">Subject</th>
+          <th scope="col">Message</th>
+          <th scope="col">Created at</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in support_requests %}
+          <tr>
+            <td>{{ req.id }}</td>
+            <td>{{ req.user }}</td>
+            <td>{{ req.subject }}</td>
+            <td>{{ req.body|linebreaksbr }}</td>
+            <td>{{ req.created_at|timezone:"America/New_York"|date:"M d, Y, g:i A" }}</td>
+            <td>{{ req.status }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">No support requests yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<style>
+  .admin-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+  .admin-page h1 {
+    margin: 0 0 20px;
+  }
+  .table-scroll {
+    overflow-x: auto;
+  }
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+    vertical-align: top;
+  }
+  .admin-table th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .admin-table td:nth-child(4) {
+    min-width: 260px;
+    max-width: 480px;
+  }
+</style>
+{% endblock %}
