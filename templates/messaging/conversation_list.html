@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Chats - RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page conversations-page">
+  <section class="empty-conversations" aria-labelledby="empty-conversations-title">
+    <h1 id="empty-conversations-title">Your chats</h1>
+    <p>You have no chats yet. Find a roommate and send them a message.</p>
+    <a class="button-primary" href="{% url 'roommate-list' %}">Find roommates</a>
+  </section>
+</main>
+{% endblock %}

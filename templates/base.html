@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20261112-remove-photo-1">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20261114-message-modal-1">
   <script>
     // Shared helper: POST JSON to the API with the CSRF token. Returns {status, data}.
     // The CSRF token is read from the cookie at the moment of the request, not from the
@@ -43,6 +43,7 @@
       {% if user.is_authenticated %}
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="{% url 'roommate-list' %}">Find roommates</a>
+          {% if not user.is_admin %}<a href="{% url 'conversation-list' %}">Chats</a>{% endif %}
         </nav>
       {% endif %}
       <div class="header-action">
