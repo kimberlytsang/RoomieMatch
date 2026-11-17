@@ -1,5 +1,7 @@
 """HTML views for sending messages and reading conversations."""
 
+from functools import wraps
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
@@ -10,6 +12,18 @@ from profiles.models import Profile
 
 from . import services
 from .models import Conversation
+
+
+def seeker_required_page(view):
+    """Keep messaging pages available to the Seeker persona only."""
+
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        if request.user.is_admin:
+            return redirect("home")
+        return view(request, *args, **kwargs)
+
+    return wrapped
 
 
 def _roommate_detail_context(
@@ -50,6 +64,7 @@ def _conversation_context(request, conversation, conversations, *, message_error
 
 
 @login_required(login_url="login-page")
+@seeker_required_page
 @require_POST
 def send_message_page(request, user_id):
     """US-09: send a message from an available roommate's profile."""
@@ -77,6 +92,7 @@ def send_message_page(request, user_id):
 
 
 @login_required(login_url="login-page")
+@seeker_required_page
 def conversation_list(request):
     """US-11: list the requester's persisted conversations."""
     conversations = _conversations_for_sidebar(request.user)
@@ -90,6 +106,7 @@ def conversation_list(request):
 
 
 @login_required(login_url="login-page")
+@seeker_required_page
 @require_http_methods(["GET", "POST"])
 def conversation_detail(request, conversation_id):
     """US-11: show a conversation and allow either participant to reply."""

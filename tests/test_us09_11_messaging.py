@@ -147,3 +147,21 @@ def test_non_participant_cannot_open_someone_elses_conversation(client, users):
 
     assert response.status_code == 404
     assert b"Conversation unavailable" in response.content
+
+
+def test_admin_cannot_access_messaging_pages(client, users):
+    conversation, _ = messaging_services.send_message(
+        users["alex"], users["maya"], "Private message"
+    )
+    admin = User.objects.create_admin("admin@example.com", "Correct-Horse-42")
+    client.force_login(admin)
+
+    profile_response = client.get(f"/roommates/{users['maya'].user_id}/")
+    assert b">Chats<" not in profile_response.content
+    assert b"Send a message" not in profile_response.content
+    assert client.get(f"/conversations/{conversation.conversation_id}/").url == "/"
+    assert client.get("/conversations/").url == "/"
+    assert client.post(
+        f"/roommates/{users['maya'].user_id}/message/", {"body": "Hello"}
+    ).url == "/"
+    assert not Message.objects.filter(sender=admin).exists()
