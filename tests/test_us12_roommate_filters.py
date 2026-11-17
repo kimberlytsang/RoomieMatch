@@ -130,11 +130,29 @@ def test_pet_no_preference_label_is_specific_to_pets(client, roommates):
     assert b"No preference with pets" in response.content
 
 
-def test_sleep_and_party_no_preference_values_are_not_filter_options(client, roommates):
+def test_no_preference_values_are_filter_options_in_their_categories(client, roommates):
     client.force_login(roommates["viewer"])
 
     response = client.get("/roommates/")
 
     assert response.status_code == 200
-    assert b"No preference with sleep" not in response.content
-    assert b"No preference with parties" not in response.content
+    assert list(response.context["sleep_preferences"]) == list(SleepPreference.choices)
+    assert list(response.context["party_preferences"]) == list(PartyPreference.choices)
+    assert b"No preference with sleep" in response.content
+    assert b"No preference with parties" in response.content
+
+
+def test_pet_no_preference_option_follows_any_pet_preference(client, roommates):
+    client.force_login(roommates["viewer"])
+
+    response = client.get("/roommates/")
+
+    assert response.status_code == 200
+    pet_options = response.context["pets_preferences"]
+    assert pet_options[0] == (
+        PetsPreference.NO_PREFERENCE,
+        PetsPreference.NO_PREFERENCE.label,
+    )
+    assert response.content.index(b"Any pet preference") < response.content.index(
+        b"No preference with pets"
+    ) < response.content.index(b"Pet friendly")

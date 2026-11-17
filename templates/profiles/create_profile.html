@@ -79,16 +79,16 @@
     <section class="create-profile-section" aria-labelledby="preferences-title">
       <div class="create-profile-section-heading">
         <h2 id="preferences-title">Home preferences</h2>
-        <p>Tell us what you want at home.</p>
+        <p>No preference is selected by default for each category. Choose another option if you like.</p>
       </div>
       <div class="create-profile-preferences">
         <fieldset class="create-profile-choice-group" aria-describedby="sleep-hint">
-          <legend>Sleep time</legend>
+          <legend>Sleep time *</legend>
           <p id="sleep-hint">Your usual sleep schedule.</p>
           <div class="create-profile-options">
             {% for value, label in sleep_preferences %}
               <label>
-                <input type="radio" name="sleep_preference" value="{{ value }}" {% if values.sleep_preference == value %}checked{% endif %}>
+                <input type="radio" name="sleep_preference" value="{{ value }}" {% if values.sleep_preference == value %}checked{% endif %} required>
                 <span>{{ label }}</span>
               </label>
             {% endfor %}
@@ -107,12 +107,12 @@
           </div>
         </fieldset>
         <fieldset class="create-profile-choice-group" aria-describedby="parties-hint">
-          <legend>Parties</legend>
+          <legend>Parties *</legend>
           <p id="parties-hint">How you feel about parties at home.</p>
           <div class="create-profile-options">
             {% for value, label in party_preferences %}
               <label>
-                <input type="radio" name="party_preference" value="{{ value }}" {% if values.party_preference == value %}checked{% endif %}>
+                <input type="radio" name="party_preference" value="{{ value }}" {% if values.party_preference == value %}checked{% endif %} required>
                 <span>{{ label }}</span>
               </label>
             {% endfor %}

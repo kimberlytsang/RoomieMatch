@@ -57,11 +57,12 @@ def test_new_user_can_open_form_and_profile_entry(signed_in, user, details):
     assert b'enctype="multipart/form-data"' in response.content
     assert b'name="profile_picture" type="file"' in response.content
     assert b'type="button" data-clear-photo hidden>Remove Photo</button>' in response.content
+    assert b'name="pets_preference" value="NO_PREFERENCE" checked required>' in response.content
     assert b"This preference is not saved" not in response.content
     assert list(response.context["sleep_preferences"]) == list(SleepPreference.choices)
     assert list(response.context["party_preferences"]) == list(PartyPreference.choices)
     for field in ("sleep_preference", "party_preference"):
-        assert f'name="{field}" value="NO_PREFERENCE" checked>'.encode() in response.content
+        assert f'name="{field}" value="NO_PREFERENCE" checked required>'.encode() in response.content
     assert not Profile.objects.filter(user=user).exists()
     assert signed_in.get(reverse("my-profile")).url == reverse("create-profile")
 
@@ -218,7 +219,7 @@ def test_invalid_create_keeps_lifestyle_selections(signed_in, user, details):
         "party_preference": PartyPreference.OFTEN,
     })
     assert response.status_code == 400
-    assert b'name="sleep_preference" value="LATE" checked>' in response.content
-    assert b'name="party_preference" value="OFTEN" checked>' in response.content
+    assert b'name="sleep_preference" value="LATE" checked required>' in response.content
+    assert b'name="party_preference" value="OFTEN" checked required>' in response.content
     assert not Profile.objects.filter(user=user).exists()
     assert not Preference.objects.filter(user=user).exists()

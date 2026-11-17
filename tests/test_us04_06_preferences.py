@@ -146,6 +146,9 @@ def test_page_and_new_login_read_saved_choices(signed_in, user, profile, locatio
         ]
         assert list(page.context["sleep_preferences"]) == list(SleepPreference.choices)
         assert list(page.context["party_preferences"]) == list(PartyPreference.choices)
+        assert b'id="preference-sleep" required' in page.content
+        assert b'id="preference-pets" required' in page.content
+        assert b'id="preference-parties" required' in page.content
         assert b"<dd>Sleep late</dd>" in page.content
         assert b"<dd>Parties often</dd>" in page.content
         for text in (b"Brooklyn, NY", b"$1,501-$2,000", b"Pet friendly", b"Edit preferences"):
