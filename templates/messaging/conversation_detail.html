@@ -30,10 +30,16 @@
         </div>
       </header>
 
-      <div class="message-thread" aria-label="Messages with {{ other_name }}">
+      <div
+        class="message-thread"
+        aria-label="Messages with {{ other_name }}"
+        aria-live="polite"
+        data-current-user-id="{{ request.user.user_id }}"
+        data-messages-url="{% url 'conversation-messages' conversation.conversation_id %}"
+      >
         <p class="message-day">Today</p>
         {% for message in messages %}
-          <article class="message-bubble{% if message.sender_id == request.user.user_id %} message-bubble-sent{% endif %}">
+          <article class="message-bubble{% if message.sender_id == request.user.user_id %} message-bubble-sent{% endif %}" data-message-id="{{ message.message_id }}">
             <p>{{ message.body }}</p>
             <small>{{ message.sent_at|date:"g:i A" }}</small>
           </article>
@@ -68,4 +74,69 @@
     });
   </script>
 {% endif %}
+
+<script>
+  const messageThread = document.querySelector(".message-thread");
+
+  if (messageThread) {
+    const currentUserId = messageThread.dataset.currentUserId;
+    const messagesUrl = messageThread.dataset.messagesUrl;
+    const existingMessages = messageThread.querySelectorAll("[data-message-id]");
+    let lastMessageId = existingMessages.length
+      ? Number(existingMessages[existingMessages.length - 1].dataset.messageId)
+      : 0;
+    let pollInFlight = false;
+
+    function isNearBottom() {
+      return messageThread.scrollHeight - messageThread.scrollTop - messageThread.clientHeight < 80;
+    }
+
+    function appendMessage(message) {
+      const bubble = document.createElement("article");
+      bubble.className = "message-bubble";
+      bubble.dataset.messageId = message.message_id;
+      if (message.sender_id === currentUserId) {
+        bubble.classList.add("message-bubble-sent");
+      }
+
+      const body = document.createElement("p");
+      body.textContent = message.body;
+      const timestamp = document.createElement("small");
+      timestamp.textContent = message.sent_at_display;
+      bubble.append(body, timestamp);
+      messageThread.append(bubble);
+    }
+
+    async function pollMessages() {
+      if (document.hidden || pollInFlight) return;
+      pollInFlight = true;
+      const shouldScroll = isNearBottom();
+
+      try {
+        const response = await fetch(`${messagesUrl}?after=${lastMessageId}`, {
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        for (const message of data.messages) {
+          appendMessage(message);
+          lastMessageId = message.message_id;
+        }
+        if (data.messages.length && shouldScroll) {
+          messageThread.scrollTop = messageThread.scrollHeight;
+        }
+      } catch (_) {
+        // A temporary network problem should not interrupt the conversation UI.
+      } finally {
+        pollInFlight = false;
+      }
+    }
+
+    window.setInterval(pollMessages, 5000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) pollMessages();
+    });
+  }
+</script>
 {% endblock %}

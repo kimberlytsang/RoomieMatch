@@ -1,2 +1,14 @@
-"""Routes for this component. Endpoints are added as each story is built."""
-urlpatterns = []
+"""JSON routes for the messaging component."""
+
+from django.urls import path
+
+from . import views
+
+
+urlpatterns = [
+    path(
+        "conversations/<uuid:conversation_id>/messages",
+        views.conversation_messages,
+        name="conversation-messages",
+    ),
+]

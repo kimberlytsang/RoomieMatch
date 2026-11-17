@@ -149,6 +149,38 @@ def test_non_participant_cannot_open_someone_elses_conversation(client, users):
     assert b"Conversation unavailable" in response.content
 
 
+def test_participant_can_poll_only_new_messages(client, users):
+    conversation, first_message = messaging_services.send_message(
+        users["alex"], users["maya"], "Hi Maya!"
+    )
+    messaging_services.send_message(users["maya"], users["alex"], "Hi Alex!")
+    client.force_login(users["alex"])
+
+    response = client.get(
+        f"/api/conversations/{conversation.conversation_id}/messages?after={first_message.message_id}"
+    )
+
+    assert response.status_code == 200
+    messages = response.json()["messages"]
+    assert len(messages) == 1
+    assert messages[0]["message_id"] == Message.objects.get(body="Hi Alex!").message_id
+    assert messages[0]["body"] == "Hi Alex!"
+    assert messages[0]["sender_id"] == str(users["maya"].user_id)
+    assert messages[0]["sent_at_display"]
+
+
+def test_non_participant_cannot_poll_someone_elses_conversation(client, users):
+    conversation, _ = messaging_services.send_message(
+        users["alex"], users["maya"], "Private message"
+    )
+    client.force_login(users["sam"])
+
+    response = client.get(f"/api/conversations/{conversation.conversation_id}/messages?after=0")
+
+    assert response.status_code == 404
+    assert response.json()["error"] == "Conversation unavailable."
+
+
 def test_admin_cannot_access_messaging_pages(client, users):
     conversation, _ = messaging_services.send_message(
         users["alex"], users["maya"], "Private message"
@@ -164,4 +196,8 @@ def test_admin_cannot_access_messaging_pages(client, users):
     assert client.post(
         f"/roommates/{users['maya'].user_id}/message/", {"body": "Hello"}
     ).url == "/"
+    poll_response = client.get(
+        f"/api/conversations/{conversation.conversation_id}/messages?after=0"
+    )
+    assert poll_response.status_code == 403
     assert not Message.objects.filter(sender=admin).exists()
