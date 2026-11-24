@@ -57,7 +57,7 @@
       <form class="chat-composer" method="post" action="{% url 'conversation-detail' conversation.conversation_id %}">
         {% csrf_token %}
         <label for="message-body">Message</label>
-        <textarea id="message-body" name="body" rows="3" maxlength="2000" placeholder="Type a message..." data-send-on-enter>{{ message_body }}</textarea>
+        <textarea id="message-body" name="body" rows="3" maxlength="2000" placeholder="Type a message..." data-send-on-enter data-draft-key="roomiematch-message-draft-{{ request.user.user_id }}-{{ conversation.conversation_id }}">{{ message_body }}</textarea>
         <button class="button-primary" type="submit">Send</button>
         <p class="message-send-hint">Press Enter to send. Shift + Enter for a new line.</p>
       </form>
@@ -85,7 +85,34 @@
 {% endif %}
 
 <script>
-  document.querySelector("[data-send-on-enter]").addEventListener("keydown", (event) => {
+  const messageBody = document.querySelector("[data-send-on-enter]");
+  const messageForm = messageBody.form;
+  const draftKey = messageBody.dataset.draftKey;
+
+  try {
+    const savedDraft = sessionStorage.getItem(draftKey);
+    if (!messageBody.value && savedDraft) {
+      messageBody.value = savedDraft;
+    }
+
+    messageBody.addEventListener("input", () => {
+      if (messageBody.value) {
+        sessionStorage.setItem(draftKey, messageBody.value);
+      } else {
+        sessionStorage.removeItem(draftKey);
+      }
+    });
+
+    messageForm.addEventListener("submit", () => {
+      if (messageBody.value.trim()) {
+        sessionStorage.removeItem(draftKey);
+      }
+    });
+  } catch (_) {
+    // Messaging still works when the browser blocks session storage.
+  }
+
+  messageBody.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
       event.currentTarget.form.requestSubmit();

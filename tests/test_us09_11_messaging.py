@@ -87,6 +87,7 @@ def test_conversation_list_and_detail_show_persisted_messages(client, users):
     assert b"Hi Maya!" in detail_response.content
     assert b"Hi Alex!" in detail_response.content
     assert b"data-send-on-enter" in detail_response.content
+    assert b"data-draft-key" in detail_response.content
 
 
 def test_user_can_reply_from_an_existing_conversation(client, users):
