@@ -11,7 +11,8 @@
     <form method="post" class="support-message-form">
       {% csrf_token %}
       <label for="message-body">Message</label>
-      <textarea id="message-body" name="body" rows="5" maxlength="2000" placeholder="Write a message...">{{ message_body }}</textarea>
+      <textarea id="message-body" name="body" rows="5" maxlength="2000" placeholder="Write a message..." data-send-on-enter>{{ message_body }}</textarea>
+      <p class="message-send-hint">Press Enter to send. Shift + Enter for a new line.</p>
       {% if message_error %}<p class="form-message" role="alert">{{ message_error }}</p>{% endif %}
       <div class="message-compose-actions">
         <button class="button-primary" type="submit">Send message</button>
@@ -20,4 +21,12 @@
     </form>
   </section>
 </main>
+<script>
+  document.querySelector("[data-send-on-enter]").addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      event.currentTarget.form.requestSubmit();
+    }
+  });
+</script>
 {% endblock %}

@@ -238,6 +238,8 @@ def test_admin_can_start_a_chat_from_a_support_request(client, users):
     compose_response = client.get(compose_url)
     assert compose_response.status_code == 200
     assert b"Message maya@example.com" in compose_response.content
+    assert b"data-send-on-enter" in compose_response.content
+    assert b"Press Enter to send. Shift + Enter for a new line." in compose_response.content
 
     send_response = client.post(compose_url, {"body": "I can help with your login issue."})
     conversation = Conversation.objects.get()
