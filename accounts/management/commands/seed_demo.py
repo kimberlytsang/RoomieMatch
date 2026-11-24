@@ -73,11 +73,6 @@ class Command(BaseCommand):
                 defaults={"display_name": name, "bio": bio},
             )
 
-        # Re-running the seed updates Maya before deleting this retired demo option.
-        Location.objects.filter(
-            city="Boston", state="MA", preferences__isnull=True
-        ).delete()
-
         self.stdout.write(self.style.SUCCESS(
             f"Seeded {len(LOCATIONS)} locations, 1 admin ({ADMIN_EMAIL}), "
             f"{len(SEEKERS)} seekers. Demo password: {DEMO_PASSWORD}"
