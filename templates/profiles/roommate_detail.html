@@ -6,7 +6,11 @@
 <main class="page-wrap roommate-page roommate-detail-page">
   <a class="back-link" href="{% url 'roommate-list' %}">← Back to roommates</a>
   <article class="roommate-detail-card">
-    <div class="roommate-avatar roommate-avatar-large" aria-hidden="true">{{ roommate.display_name|first|upper }}</div>
+    {% if roommate.profile_picture %}
+      <img class="roommate-avatar roommate-avatar-large roommate-avatar-image" src="{% url 'profile-photo' roommate.user_id %}" alt="{{ roommate.display_name }}'s profile photo">
+    {% else %}
+      <div class="roommate-avatar roommate-avatar-large" aria-hidden="true">{{ roommate.display_name|first|upper }}</div>
+    {% endif %}
     <div>
       <p class="eyebrow">Roommate profile</p>
       <h1>{{ roommate.display_name }}</h1>

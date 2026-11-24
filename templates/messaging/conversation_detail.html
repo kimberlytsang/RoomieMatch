@@ -10,7 +10,11 @@
       <nav class="chat-list" aria-label="Your conversations">
         {% for item in conversations %}
           <a class="chat-list-item{% if item.conversation_id == conversation.conversation_id %} is-active{% endif %}" href="{% url 'conversation-detail' item.conversation_id %}">
-            <span class="conversation-avatar" aria-hidden="true">{{ item.other_name|first|upper }}</span>
+            {% if item.other_user.profile.profile_picture %}
+              <img class="conversation-avatar conversation-avatar-image" src="{% url 'profile-photo' item.other_user.user_id %}" alt="">
+            {% else %}
+              <span class="conversation-avatar" aria-hidden="true">{{ item.other_name|first|upper }}</span>
+            {% endif %}
             <span class="chat-list-copy">
               <strong>{{ item.other_name }}</strong>
               <small>{{ item.last_message.body|default:"Start a conversation"|truncatechars:42 }}</small>
@@ -23,7 +27,11 @@
 
     <section class="chat-main" aria-labelledby="conversation-title">
       <header class="chat-main-header">
-        <span class="conversation-avatar" aria-hidden="true">{{ other_name|first|upper }}</span>
+        {% if other_user.profile.profile_picture %}
+          <img class="conversation-avatar conversation-avatar-image" src="{% url 'profile-photo' other_user.user_id %}" alt="">
+        {% else %}
+          <span class="conversation-avatar" aria-hidden="true">{{ other_name|first|upper }}</span>
+        {% endif %}
         <div>
           <h2 id="conversation-title">{{ other_name }}</h2>
           <a href="{% url 'roommate-detail' other_user.user_id %}">View profile</a>
