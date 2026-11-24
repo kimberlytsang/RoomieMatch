@@ -7,7 +7,12 @@
   <section class="chat-layout" aria-label="Chats">
     <aside class="chat-sidebar">
       <h1>Chats</h1>
-      <nav class="chat-list" aria-label="Your conversations">
+      <nav
+        class="chat-list"
+        aria-label="Your conversations"
+        data-conversations-url="{% url 'conversation-sidebar' %}"
+        data-active-conversation-id="{{ conversation.conversation_id }}"
+      >
         {% for item in conversations %}
           <a class="chat-list-item{% if item.conversation_id == conversation.conversation_id %} is-active{% endif %}" href="{% url 'conversation-detail' item.conversation_id %}">
             {% if item.other_user.profile.profile_picture %}
@@ -179,6 +184,67 @@
     window.setInterval(pollMessages, 5000);
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) pollMessages();
+    });
+  }
+
+  const chatList = document.querySelector(".chat-list");
+
+  if (chatList) {
+    const conversationsUrl = chatList.dataset.conversationsUrl;
+    const activeConversationId = chatList.dataset.activeConversationId;
+    let conversationListSignature = "";
+
+    function chatListItem(item) {
+      const link = document.createElement("a");
+      link.className = "chat-list-item";
+      link.href = item.url;
+      if (item.conversation_id === activeConversationId) {
+        link.classList.add("is-active");
+      }
+
+      if (item.profile_photo_url) {
+        const image = document.createElement("img");
+        image.className = "conversation-avatar conversation-avatar-image";
+        image.src = item.profile_photo_url;
+        image.alt = "";
+        link.append(image);
+      } else {
+        const avatar = document.createElement("span");
+        avatar.className = "conversation-avatar";
+        avatar.setAttribute("aria-hidden", "true");
+        avatar.textContent = item.other_name.slice(0, 1).toUpperCase();
+        link.append(avatar);
+      }
+
+      const copy = document.createElement("span");
+      copy.className = "chat-list-copy";
+      const name = document.createElement("strong");
+      name.textContent = item.other_name;
+      const preview = document.createElement("small");
+      preview.textContent = item.last_message;
+      copy.append(name, preview);
+      link.append(copy);
+      return link;
+    }
+
+    async function pollConversationList() {
+      try {
+        const response = await fetch(conversationsUrl, { headers: { Accept: "application/json" } });
+        if (!response.ok) return;
+        const data = await response.json();
+        const signature = JSON.stringify(data.conversations);
+        if (signature === conversationListSignature) return;
+        conversationListSignature = signature;
+        chatList.replaceChildren(...data.conversations.map(chatListItem));
+      } catch (_) {
+        // A temporary network problem should not interrupt the conversation UI.
+      }
+    }
+
+    pollConversationList();
+    window.setInterval(pollConversationList, 5000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) pollConversationList();
     });
   }
 </script>

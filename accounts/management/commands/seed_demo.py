@@ -22,7 +22,6 @@ DEMO_PASSWORD = "DemoPass123!"
 ADMIN_EMAIL = "admin@roomiematch.test"
 
 LOCATIONS = [
-    ("Boston", "MA"),
     ("Manhattan", "NY"),
     ("Brooklyn", "NY"),
     ("Queens", "NY"),
@@ -35,7 +34,7 @@ LOCATIONS = [
 # (email, display name, bio, location, budget, pets, sleep, parties)
 SEEKERS = [
     ("alex@roomiematch.test", "Alex", "I am a graduate student who likes baking and wants a clean, quiet home.", "Manhattan", BudgetRange.B1501_2000, PetsPreference.NO_PETS, SleepPreference.EARLY, PartyPreference.NO_PARTIES),
-    ("maya@roomiematch.test", "Maya", "I am a grad student in Boston. I like baking and walks. I want a quiet home with friendly roommates.", "Boston", BudgetRange.B1001_1500, PetsPreference.NO_PETS, SleepPreference.EARLY, PartyPreference.NO_PARTIES),
+    ("maya@roomiematch.test", "Maya", "I am a grad student in New York. I like baking and walks. I want a quiet home with friendly roommates.", "Manhattan", BudgetRange.B1001_1500, PetsPreference.NO_PETS, SleepPreference.EARLY, PartyPreference.NO_PARTIES),
     ("sam@roomiematch.test", "Sam", "I study design and want a friendly home with space for my plants.", "Brooklyn", BudgetRange.B1001_1500, PetsPreference.PET_FRIENDLY, SleepPreference.LATE, PartyPreference.SOMETIMES),
     ("jordan@roomiematch.test", "Jordan", "I am starting a new job and enjoy cooking in a quiet home.", "Brooklyn", BudgetRange.B1501_2000, PetsPreference.NO_PREFERENCE, SleepPreference.EARLY, PartyPreference.NO_PARTIES),
     ("taylor@roomiematch.test", "Taylor", "I enjoy Sunday walks and would like to share meals with roommates sometimes.", "Manhattan", BudgetRange.B2001_2500, PetsPreference.NO_PETS, SleepPreference.VARIES, PartyPreference.OFTEN),
@@ -73,6 +72,11 @@ class Command(BaseCommand):
                 user=user,
                 defaults={"display_name": name, "bio": bio},
             )
+
+        # Re-running the seed updates Maya before deleting this retired demo option.
+        Location.objects.filter(
+            city="Boston", state="MA", preferences__isnull=True
+        ).delete()
 
         self.stdout.write(self.style.SUCCESS(
             f"Seeded {len(LOCATIONS)} locations, 1 admin ({ADMIN_EMAIL}), "

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Message {{ recipient.email }} - RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page">
+  <section class="empty-conversations support-message-compose" aria-labelledby="support-message-title">
+    <p class="eyebrow">Support request #{{ support_request.id }}</p>
+    <h1 id="support-message-title">Message {{ recipient.email }}</h1>
+    <p>Contact the user about: {{ support_request.subject }}</p>
+    <form method="post" class="support-message-form">
+      {% csrf_token %}
+      <label for="message-body">Message</label>
+      <textarea id="message-body" name="body" rows="5" maxlength="2000" placeholder="Write a message...">{{ message_body }}</textarea>
+      {% if message_error %}<p class="form-message" role="alert">{{ message_error }}</p>{% endif %}
+      <div class="message-compose-actions">
+        <button class="button-primary" type="submit">Send message</button>
+        <a class="button-secondary" href="{% url 'app-admin' %}">Cancel</a>
+      </div>
+    </form>
+  </section>
+</main>
+{% endblock %}

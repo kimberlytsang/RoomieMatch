@@ -30,11 +30,14 @@ def account_settings(request):
 def app_admin(request):
     if not request.user.is_admin:
         return redirect("home")
+    support_requests = list(services.get_support_requests())
+    for support_request in support_requests:
+        support_request.contact_user = services.get_user_by_email(support_request.user)
     return render(
         request,
         "app_admin.html",
         {
-            "support_requests": services.get_support_requests(),
+            "support_requests": support_requests,
             "status_choices": SupportRequestStatus.choices,
         },
     )

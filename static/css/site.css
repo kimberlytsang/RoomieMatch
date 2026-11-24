@@ -324,7 +324,7 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .delete-account-modal-content .delete-account-warning { margin-bottom: 8px; color: #b94339; font-size: 12px; font-weight: 700; text-transform: uppercase; }
 .delete-account-modal-content .delete-account-error { margin: 0 0 16px; color: #a3332d; }
 .delete-account-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-.button-secondary { min-height: 42px; padding: 0 18px; border: 1px solid #d5b9af; border-radius: 5px; color: #3f231a; background: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.button-secondary { display: inline-flex; min-height: 42px; justify-content: center; align-items: center; padding: 0 18px; border: 1px solid #d5b9af; border-radius: 5px; color: #3f231a; background: #fff; font: inherit; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; }
 .button-secondary:hover { background: #fff1ec; }
 .roommate-heading { max-width: 610px; margin-bottom: 38px; }
 .roommate-heading h1, .roommate-detail-card h1 { margin-bottom: 10px; font-size: clamp(38px, 5vw, 58px); font-weight: 700; line-height: 1; }
@@ -388,6 +388,10 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .message-send-hint { margin: -5px 0 0; color: #806d66; font-size: 11px; }
 .message-compose-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 2px; }
 .message-compose-actions .button-primary, .message-compose-actions .button-secondary { width: 100%; }
+.support-message-compose { max-width: 620px; text-align: left; }
+.support-message-form { display: grid; gap: 10px; margin-top: 22px; text-align: left; }
+.support-message-form label { color: #3f231a; font-size: 12px; font-weight: 700; }
+.support-message-form textarea { width: 100%; min-height: 112px; padding: 12px; border: 1px solid #f2b9aa; border-radius: 5px; color: #3f231a; background: #fff; font: inherit; resize: vertical; }
 .conversation-avatar { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #ff8f82, #6d71aa); font-weight: 700; }
 .conversation-avatar-image { display: block; object-fit: cover; }
 .empty-conversations { display: grid; min-height: calc(100vh - 250px); place-content: center; max-width: 620px; margin: 0 auto; padding: 42px 28px; text-align: center; }

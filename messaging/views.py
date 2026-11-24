@@ -1,6 +1,7 @@
 """JSON endpoints for messaging. Business rules live in services.py."""
 
 from django.http import JsonResponse
+from django.urls import reverse
 from django.utils import dateformat, timezone
 from django.views.decorators.http import require_GET
 
@@ -18,9 +19,6 @@ def conversation_messages(request, conversation_id):
     The conversation page polls this small endpoint instead of refreshing the
     whole document, so a draft in the compose box is never lost.
     """
-    if request.user.is_admin:
-        return error(403, "Seeker access required.")
-
     after = request.GET.get("after", "0")
     if not after.isdigit():
         return error(400, "after must be a message ID.")
@@ -46,3 +44,30 @@ def conversation_messages(request, conversation_id):
             for message in messages
         ]
     })
+
+
+@require_GET
+@authenticated_only
+def conversation_sidebar(request):
+    """Return the requester's chat list so new conversations appear without refresh."""
+    conversations = []
+    for conversation in services.list_conversations(request.user):
+        other_user = services.other_participant(conversation, request.user)
+        last_message = conversation.messages.order_by("-sent_at", "-message_id").first()
+        profile = getattr(other_user, "profile", None)
+        conversations.append(
+            {
+                "conversation_id": str(conversation.conversation_id),
+                "other_name": services.participant_name(other_user),
+                "last_message": last_message.body if last_message else "Start a conversation",
+                "url": reverse(
+                    "conversation-detail", kwargs={"conversation_id": conversation.conversation_id}
+                ),
+                "profile_photo_url": (
+                    reverse("profile-photo", kwargs={"user_id": other_user.user_id})
+                    if profile and profile.profile_picture
+                    else ""
+                ),
+            }
+        )
+    return JsonResponse({"conversations": conversations})

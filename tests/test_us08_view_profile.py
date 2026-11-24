@@ -22,7 +22,7 @@ def client():
 
 @pytest.fixture
 def profiles(db):
-    location = Location.objects.create(city="Boston", state="MA")
+    location = Location.objects.create(city="Queens", state="NY")
 
     def create(email, name, *, sleep, pets, parties):
         user = User.objects.create_user(email, "Correct-Horse-42")
@@ -74,7 +74,7 @@ def test_profile_shows_shared_housing_and_lifestyle_preferences(client, profiles
 
     assert response.status_code == 200
     assert b"$1,001-$1,500 / month" in response.content
-    assert b"Boston, MA" in response.content
+    assert b"Queens, NY" in response.content
     assert b"Sleep preference" in response.content
     assert b"Sleep early" in response.content
     assert b"Pet preference" in response.content

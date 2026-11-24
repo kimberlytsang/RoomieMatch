@@ -1,29 +1,16 @@
 """HTML views for sending messages and reading conversations."""
 
-from functools import wraps
-
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
+from accounts.models import SupportRequest, User
 from profiles import services as profile_services
 from profiles.models import Profile
 
 from . import services
 from .models import Conversation
-
-
-def seeker_required_page(view):
-    """Keep messaging pages available to the Seeker persona only."""
-
-    @wraps(view)
-    def wrapped(request, *args, **kwargs):
-        if request.user.is_admin:
-            return redirect("home")
-        return view(request, *args, **kwargs)
-
-    return wrapped
 
 
 def _roommate_detail_context(
@@ -64,7 +51,6 @@ def _conversation_context(request, conversation, conversations, *, message_error
 
 
 @login_required(login_url="login-page")
-@seeker_required_page
 @require_POST
 def send_message_page(request, user_id):
     """US-09: send a message from an available roommate's profile."""
@@ -92,7 +78,6 @@ def send_message_page(request, user_id):
 
 
 @login_required(login_url="login-page")
-@seeker_required_page
 def conversation_list(request):
     """US-11: list the requester's persisted conversations."""
     conversations = _conversations_for_sidebar(request.user)
@@ -106,7 +91,6 @@ def conversation_list(request):
 
 
 @login_required(login_url="login-page")
-@seeker_required_page
 @require_http_methods(["GET", "POST"])
 def conversation_detail(request, conversation_id):
     """US-11: show a conversation and allow either participant to reply."""
@@ -141,3 +125,32 @@ def conversation_detail(request, conversation_id):
         "messaging/conversation_detail.html",
         _conversation_context(request, conversation, conversations),
     )
+
+
+@login_required(login_url="login-page")
+@require_http_methods(["GET", "POST"])
+def support_request_message(request, request_id):
+    """Let an administrator contact the account that submitted a support request."""
+    if not request.user.is_admin:
+        return redirect("home")
+
+    try:
+        support_request = SupportRequest.objects.get(pk=request_id)
+        recipient = User.objects.get(email__iexact=support_request.user)
+    except (SupportRequest.DoesNotExist, User.DoesNotExist):
+        return render(request, "messaging/conversation_unavailable.html", status=404)
+
+    values = {"support_request": support_request, "recipient": recipient, "message_body": ""}
+    if request.method == "POST":
+        body = request.POST.get("body", "")
+        try:
+            conversation, _ = services.send_message(request.user, recipient, body)
+        except ValidationError as exc:
+            values.update(
+                message_error=exc.message_dict.get("body", [exc.messages[0]])[0],
+                message_body=body,
+            )
+            return render(request, "messaging/support_message_compose.html", values, status=400)
+        return redirect("conversation-detail", conversation_id=conversation.conversation_id)
+
+    return render(request, "messaging/support_message_compose.html", values)

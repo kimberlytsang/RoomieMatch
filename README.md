@@ -122,7 +122,7 @@ python -m pytest
 | admin@roomiematch.test | App Administrator | DemoPass123! |
 | alex@, maya@, sam@, jordan@, taylor@, casey@, riley@ `roomiematch.test` | Seeker (with profile and preferences) | DemoPass123! |
 
-It also loads the list of locations (Boston, Manhattan, Brooklyn, Queens, The Bronx, Staten Island, Jersey City, Hoboken). These passwords are for local demos only.
+It also loads the list of locations (Manhattan, Brooklyn, Queens, The Bronx, Staten Island, Jersey City, Hoboken). These passwords are for local demos only.
 
 ## Configuration
 

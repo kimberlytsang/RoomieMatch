@@ -3,7 +3,7 @@
 import pytest
 from django.test import Client
 
-from accounts.models import User
+from accounts.models import SupportRequest, User
 from messaging.models import Conversation, Message
 from messaging import services as messaging_services
 from profiles.models import BudgetRange, Location, PetsPreference, Preference, Profile
@@ -173,6 +173,27 @@ def test_participant_can_poll_only_new_messages(client, users):
     assert messages[0]["sent_at_display"]
 
 
+def test_participant_can_poll_their_conversation_sidebar(client, users):
+    conversation, _ = messaging_services.send_message(
+        users["maya"], users["alex"], "Hi Alex!"
+    )
+    client.force_login(users["alex"])
+
+    response = client.get("/api/conversations/sidebar")
+
+    assert response.status_code == 200
+    conversations = response.json()["conversations"]
+    assert conversations == [
+        {
+            "conversation_id": str(conversation.conversation_id),
+            "other_name": "Maya",
+            "last_message": "Hi Alex!",
+            "url": f"/conversations/{conversation.conversation_id}/",
+            "profile_photo_url": "",
+        }
+    ]
+
+
 def test_non_participant_cannot_poll_someone_elses_conversation(client, users):
     conversation, _ = messaging_services.send_message(
         users["alex"], users["maya"], "Private message"
@@ -185,23 +206,45 @@ def test_non_participant_cannot_poll_someone_elses_conversation(client, users):
     assert response.json()["error"] == "Conversation unavailable."
 
 
-def test_admin_cannot_access_messaging_pages(client, users):
+def test_admin_can_use_chats_but_cannot_access_someone_elses_conversation(client, users):
     conversation, _ = messaging_services.send_message(
         users["alex"], users["maya"], "Private message"
     )
     admin = User.objects.create_admin("admin@example.com", "Correct-Horse-42")
     client.force_login(admin)
 
-    profile_response = client.get(f"/roommates/{users['maya'].user_id}/")
-    assert b">Chats<" not in profile_response.content
-    assert b"Send a message" not in profile_response.content
-    assert client.get(f"/conversations/{conversation.conversation_id}/").url == "/"
-    assert client.get("/conversations/").url == "/"
-    assert client.post(
-        f"/roommates/{users['maya'].user_id}/message/", {"body": "Hello"}
-    ).url == "/"
+    chats_response = client.get("/conversations/")
+    assert chats_response.status_code == 200
+    assert b"Open a support request to contact a user." in chats_response.content
+    assert client.get(f"/conversations/{conversation.conversation_id}/").status_code == 404
     poll_response = client.get(
         f"/api/conversations/{conversation.conversation_id}/messages?after=0"
     )
-    assert poll_response.status_code == 403
-    assert not Message.objects.filter(sender=admin).exists()
+    assert poll_response.status_code == 404
+
+
+def test_admin_can_start_a_chat_from_a_support_request(client, users):
+    support_request = SupportRequest.objects.create(
+        subject="Login issue", body="I need help logging in.", user=users["maya"].email
+    )
+    admin = User.objects.create_admin("admin@example.com", "Correct-Horse-42")
+    client.force_login(admin)
+
+    admin_page = client.get("/app-admin/")
+    compose_url = f"/app-admin/support-requests/{support_request.id}/message/"
+    assert admin_page.status_code == 200
+    assert compose_url.encode() in admin_page.content
+
+    compose_response = client.get(compose_url)
+    assert compose_response.status_code == 200
+    assert b"Message maya@example.com" in compose_response.content
+
+    send_response = client.post(compose_url, {"body": "I can help with your login issue."})
+    conversation = Conversation.objects.get()
+    assert send_response.status_code == 302
+    assert send_response.url == f"/conversations/{conversation.conversation_id}/"
+    assert Message.objects.filter(
+        conversation=conversation,
+        sender=admin,
+        body="I can help with your login issue.",
+    ).exists()
