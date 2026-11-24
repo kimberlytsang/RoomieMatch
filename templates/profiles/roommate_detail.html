@@ -38,7 +38,8 @@
       <p class="eyebrow">New chat</p>
       <h2 id="message-compose-title">Meet {{ roommate.display_name }}</h2>
       <label for="message-body">Message</label>
-      <textarea id="message-body" name="body" rows="4" maxlength="2000" placeholder="Write a message to {{ roommate.display_name }}...">{% if message_attempted %}{{ message_body }}{% else %}Hi {{ roommate.display_name }}! I am looking for a place in New York too. Want to chat?{% endif %}</textarea>
+      <textarea id="message-body" name="body" rows="4" maxlength="2000" placeholder="Write a message to {{ roommate.display_name }}..." data-send-on-enter>{% if message_attempted %}{{ message_body }}{% else %}Hi {{ roommate.display_name }}! I am looking for a place in New York too. Want to chat?{% endif %}</textarea>
+      <p class="message-send-hint">Press Enter to send. Shift + Enter for a new line.</p>
       {% if message_error %}<p class="form-message" role="alert">{{ message_error }}</p>{% endif %}
       <div class="message-compose-actions">
         <button class="button-primary" type="submit">Send message</button>
@@ -55,6 +56,12 @@
     };
     document.querySelector("[data-open-message-modal]").addEventListener("click", openMessageModal);
     document.querySelector("[data-close-message-modal]").addEventListener("click", () => messageComposeModal.close());
+    document.getElementById("message-body").addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        event.currentTarget.form.requestSubmit();
+      }
+    });
     {% if message_error %}openMessageModal();{% endif %}
   </script>
 {% endif %}

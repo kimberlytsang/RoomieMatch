@@ -382,6 +382,7 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .message-compose-modal label { color: #3f231a; font-size: 12px; font-weight: 700; }
 .message-compose-modal textarea { display: block; width: 100%; min-height: 112px; padding: 12px; border: 1px solid #f2b9aa; border-radius: 5px; color: #3f231a; background: #fff; color-scheme: light; font: inherit; resize: vertical; }
 .message-compose-modal textarea::placeholder { color: #806d66; opacity: 1; }
+.message-send-hint { margin: -5px 0 0; color: #806d66; font-size: 11px; }
 .message-compose-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 2px; }
 .message-compose-actions .button-primary, .message-compose-actions .button-secondary { width: 100%; }
 .conversation-avatar { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #ff8f82, #6d71aa); font-weight: 700; }
@@ -419,6 +420,7 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .chat-composer label { grid-column: 1 / -1; color: #3f231a; font-size: 11px; font-weight: 700; }
 .chat-composer textarea { display: block; width: 100%; min-height: 70px; padding: 11px 12px; border: 1px solid #f2b9aa; border-radius: 4px; color: #3f231a; background: #fff; color-scheme: light; font: inherit; font-size: 12px; resize: vertical; }
 .chat-composer textarea::placeholder { color: #806d66; opacity: 1; }
+.chat-composer .message-send-hint { grid-column: 1 / -1; }
 .chat-composer .button-primary { min-width: 96px; min-height: 42px; }
 .message-error-modal { width: min(100% - 36px, 480px); padding: 0; border: 0; border-radius: 7px; color: #3f231a; background: #fffdfb; box-shadow: 0 24px 70px rgba(9, 10, 20, .3); text-align: center; }
 .message-error-modal::backdrop { background: rgba(32, 33, 54, .55); }

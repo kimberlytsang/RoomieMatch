@@ -54,6 +54,8 @@ def test_message_modal_starts_with_an_editable_greeting(client, users):
 
     assert response.status_code == 200
     assert b"Hi Maya! I am looking for a place in New York too. Want to chat?" in response.content
+    assert b"data-send-on-enter" in response.content
+    assert b"Press Enter to send. Shift + Enter for a new line." in response.content
 
 
 def test_empty_message_shows_error_and_is_not_saved(client, users):
@@ -84,6 +86,7 @@ def test_conversation_list_and_detail_show_persisted_messages(client, users):
     assert detail_response.status_code == 200
     assert b"Hi Maya!" in detail_response.content
     assert b"Hi Alex!" in detail_response.content
+    assert b"data-send-on-enter" in detail_response.content
 
 
 def test_user_can_reply_from_an_existing_conversation(client, users):

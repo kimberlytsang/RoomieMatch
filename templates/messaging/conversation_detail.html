@@ -57,8 +57,9 @@
       <form class="chat-composer" method="post" action="{% url 'conversation-detail' conversation.conversation_id %}">
         {% csrf_token %}
         <label for="message-body">Message</label>
-        <textarea id="message-body" name="body" rows="3" maxlength="2000" placeholder="Type a message...">{{ message_body }}</textarea>
+        <textarea id="message-body" name="body" rows="3" maxlength="2000" placeholder="Type a message..." data-send-on-enter>{{ message_body }}</textarea>
         <button class="button-primary" type="submit">Send</button>
+        <p class="message-send-hint">Press Enter to send. Shift + Enter for a new line.</p>
       </form>
     </section>
   </section>
@@ -84,6 +85,13 @@
 {% endif %}
 
 <script>
+  document.querySelector("[data-send-on-enter]").addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      event.currentTarget.form.requestSubmit();
+    }
+  });
+
   const messageThread = document.querySelector(".message-thread");
 
   if (messageThread) {
