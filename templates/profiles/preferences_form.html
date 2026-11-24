@@ -26,8 +26,8 @@
         </div>
       </div>
       <div class="field-group">
-        <label for="preference-sleep">Sleep time</label>
-        <select id="preference-sleep">
+        <label for="preference-sleep">Sleep time *</label>
+        <select id="preference-sleep" required>
           {% for value, label in sleep_preferences %}
             <option value="{{ value }}">{{ label }}</option>
           {% endfor %}
@@ -43,8 +43,8 @@
         </select>
       </div>
       <div class="field-group">
-        <label for="preference-parties">Parties</label>
-        <select id="preference-parties">
+        <label for="preference-parties">Parties *</label>
+        <select id="preference-parties" required>
           {% for value, label in party_preferences %}
             <option value="{{ value }}">{{ label }}</option>
           {% endfor %}

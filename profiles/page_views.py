@@ -63,17 +63,9 @@ def roommate_list(request):
             "roommates": roommates,
             "locations": Location.objects.order_by("city", "state"),
             "budget_ranges": BudgetRange.choices,
-            "pets_preferences": PetsPreference.choices,
-            # Sleep and party "no preference" values are defaults until profile
-            # management supports choosing them, so do not offer them as filters.
-            "sleep_preferences": [
-                choice for choice in SleepPreference.choices
-                if choice[0] != SleepPreference.NO_PREFERENCE
-            ],
-            "party_preferences": [
-                choice for choice in PartyPreference.choices
-                if choice[0] != PartyPreference.NO_PREFERENCE
-            ],
+            "pets_preferences": PROFILE_PETS_CHOICES,
+            "sleep_preferences": SleepPreference.choices,
+            "party_preferences": PartyPreference.choices,
             "selected_filters": selected_filters,
             "filters_active": any(
                 (
@@ -153,7 +145,7 @@ def create_profile(request):
         "bio": "",
         "location_id": "",
         "budget_range": BudgetRange.B1001_1500,
-        "pets_preference": "",
+        "pets_preference": PetsPreference.NO_PREFERENCE,
         "sleep_preference": SleepPreference.NO_PREFERENCE,
         "party_preference": PartyPreference.NO_PREFERENCE,
     }

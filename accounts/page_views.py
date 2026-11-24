@@ -2,6 +2,8 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 
+from . import services
+from .models import SupportRequestStatus
 
 def home(request):
     return render(request, "home.html")
@@ -22,3 +24,17 @@ def login_page(request):
 @login_required(login_url="login-page")
 def account_settings(request):
     return render(request, "account_settings.html")
+
+
+@login_required(login_url="login-page")
+def app_admin(request):
+    if not request.user.is_admin:
+        return redirect("home")
+    return render(
+        request,
+        "app_admin.html",
+        {
+            "support_requests": services.get_support_requests(),
+            "status_choices": SupportRequestStatus.choices,
+        },
+    )

@@ -1,5 +1,6 @@
 """View layer: parse the request, enforce permissions, call services, return JSON.
 Business rules live in services.py, not here."""
+import json
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
@@ -7,6 +8,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from config.api import BadRequest, authenticated_only, error, json_body
 
 from . import services
+from .models import SupportRequestStatus
 
 
 def _credentials(request, *, list_missing_fields=False):
@@ -102,6 +104,47 @@ def change_password(request):
 
     update_session_auth_hash(request, request.user)
     return JsonResponse({"message": "Password updated successfully."})
+
+@require_POST
+@authenticated_only
+def support_request(request):
+    """POST /api/auth/support (US-18). Authenticated. 201, 400, 401"""
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError as exc:
+        return error(400, str(exc))
+    user = request.user.email
+    subject = data.get('subject')
+    body = data.get('body')
+    if not all(isinstance(value, str) and value for value in (
+        subject, body
+    )):
+        return error(400, "Subject and Body are required.")
+    try: 
+        services.submit_support_request(user,subject,body)
+    except:
+        return error(400, "Invalid input.")
+    return JsonResponse({"message": "Support request successfully submitted."}, status=201)
+
+
+@require_POST
+@authenticated_only
+def update_support_request_status(request, request_id):
+    """POST /api/auth/support/<id>/status (US-20). ADMIN only."""
+    if not request.user.is_admin:
+        return error(403, "Administrator access required.")
+    try:
+        data = json_body(request)
+    except BadRequest as exc:
+        return error(400, str(exc))
+    status = data.get("status")
+    if not isinstance(status, str) or status not in SupportRequestStatus.values:
+        return error(400, "Invalid support request status.")
+    try:
+        services.update_support_request_status(request_id, status)
+    except services.SupportRequestNotFound:
+        return error(404, "Support request not found.")
+    return JsonResponse({"message": "Support request status updated.", "status": status})
 
 
 @require_http_methods(["DELETE"])

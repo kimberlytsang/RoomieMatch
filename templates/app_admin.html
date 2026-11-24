@@ -1,0 +1,215 @@
+{% extends "base.html" %} {% load tz %} {% block title %}User Support Requests ·
+RoomieMatch{% endblock %} {% block content %}
+<main class="admin-page">
+  <h1 id="support-requests-heading">User Support Requests</h1>
+
+  <div class="table-scroll">
+    <table class="admin-table" aria-labelledby="support-requests-heading">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">User</th>
+          <th scope="col">Subject</th>
+          <th scope="col">Message</th>
+          <th scope="col">Created at</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in support_requests %}
+        <tr>
+          <td>{{ req.id }}</td>
+          <td>{{ req.user }}</td>
+          <td>{{ req.subject }}</td>
+          <td>{{ req.body|linebreaksbr }}</td>
+          <td>
+            {{ req.created_at|timezone:"America/New_York"|date:"M d, Y, g:i A"}}
+          </td>
+          <td>
+            <div
+              class="support-status-form"
+              data-action="{% url 'support-request-status' req.id %}"
+            >
+              <label class="visually-hidden" for="status-{{ req.id }}"
+                >Status for request {{ req.id }}</label
+              >
+              <select
+                id="status-{{ req.id }}"
+                name="status"
+                data-saved-status="{{ req.status }}"
+              >
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if req.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6">No support requests yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="support-status-actions">
+    <p id="support-status-feedback" role="status" aria-live="polite"></p>
+    <button id="save-support-statuses" type="button" disabled>
+      Save Changes
+    </button>
+  </div>
+</main>
+
+<style>
+  .admin-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+  .admin-page h1 {
+    margin: 0 0 20px;
+  }
+  .table-scroll {
+    overflow-x: auto;
+  }
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+    vertical-align: top;
+  }
+  .admin-table th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .admin-table td:nth-child(4) {
+    min-width: 260px;
+    max-width: 480px;
+  }
+  .support-status-form {
+    display: flex;
+    align-items: center;
+  }
+  .support-status-form select {
+    min-height: 36px;
+    padding: 5px 9px;
+    border: 1px solid rgba(128, 128, 128, 0.5);
+    border-radius: 4px;
+    font: inherit;
+  }
+  .support-status-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .support-status-actions p {
+    margin: 0;
+  }
+  .support-status-actions button {
+    min-height: 40px;
+    padding: 7px 16px;
+    border: 1px solid #ff6f61;
+    border-radius: 4px;
+    color: #fff;
+    background: #ff6f61;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .support-status-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
+<script>
+  const supportStatusRows = Array.from(
+    document.querySelectorAll(".support-status-form"),
+  );
+  const saveSupportStatuses = document.getElementById("save-support-statuses");
+  const supportStatusFeedback = document.getElementById(
+    "support-status-feedback",
+  );
+
+  function changedSupportStatusRows() {
+    return supportStatusRows.filter((row) => {
+      const select = row.querySelector("select");
+      return select.value !== select.dataset.savedStatus;
+    });
+  }
+
+  function refreshSaveButton() {
+    saveSupportStatuses.disabled = changedSupportStatusRows().length === 0;
+  }
+
+  supportStatusRows.forEach((row) => {
+    row.querySelector("select").addEventListener("change", () => {
+      supportStatusFeedback.textContent = "";
+      refreshSaveButton();
+    });
+  });
+  refreshSaveButton();
+
+  saveSupportStatuses.addEventListener("click", async () => {
+    const changedRows = changedSupportStatusRows();
+    if (!changedRows.length) return;
+
+    saveSupportStatuses.disabled = true;
+    supportStatusRows.forEach((row) => {
+      row.querySelector("select").disabled = true;
+    });
+    supportStatusFeedback.textContent = "Saving changes…";
+
+    const results = await Promise.all(
+      changedRows.map(async (row) => {
+        const select = row.querySelector("select");
+        try {
+          const response = await postJson(row.dataset.action, {
+            status: select.value,
+          });
+          if (response.status === 200) {
+            select.dataset.savedStatus = select.value;
+            return true;
+          }
+        } catch (error) {
+          // Keep this row dirty so its selected value can be retried.
+        }
+        return false;
+      }),
+    );
+
+    supportStatusRows.forEach((row) => {
+      row.querySelector("select").disabled = false;
+    });
+    const savedCount = results.filter(Boolean).length;
+    const failedCount = results.length - savedCount;
+    if (failedCount === 0) {
+      supportStatusFeedback.textContent = `Saved ${savedCount} status change${savedCount === 1 ? "" : "s"}.`;
+    } else if (savedCount > 0) {
+      supportStatusFeedback.textContent = `Saved ${savedCount} change${savedCount === 1 ? "" : "s"}; ${failedCount} could not be saved. Unsuccessful selections are preserved.`;
+    } else {
+      supportStatusFeedback.textContent =
+        "Could not save changes. Your selections are preserved; please try again.";
+    }
+    refreshSaveButton();
+  });
+</script>
+{% endblock %}
