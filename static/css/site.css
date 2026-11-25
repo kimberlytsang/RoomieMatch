@@ -329,6 +329,13 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .roommate-heading { max-width: 610px; margin-bottom: 38px; }
 .roommate-heading h1, .roommate-detail-card h1 { margin-bottom: 10px; font-size: clamp(38px, 5vw, 58px); font-weight: 700; line-height: 1; }
 .roommate-heading > p:last-child { margin-bottom: 0; color: #806d66; font-size: 14px; }
+.roommate-mode-button { margin-top: 16px; }
+.compatibility-score { margin: 0 0 12px; font-size: 13px; font-weight: 700; }
+.compatibility-score-high { color: #287044; }
+.compatibility-score-medium { color: #946200; }
+.compatibility-score-low { color: #a3332d; }
+.roommate-card-suggestion .compatibility-score { margin-top: auto; }
+.roommate-card-suggestion .roommate-profile-link { margin-top: 0; }
 .roommate-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 14px 16px; margin-bottom: 26px; padding: 20px; border: 1px solid #ffcabb; border-radius: 8px; background: var(--paper); box-shadow: 0 8px 20px rgba(9, 10, 20, .1); }
 .roommate-filters > .filter-field:first-child { grid-column: 1 / -1; }
 .filter-field { min-width: 0; }
