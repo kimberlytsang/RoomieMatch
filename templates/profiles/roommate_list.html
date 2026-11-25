@@ -8,8 +8,14 @@
     <p class="eyebrow">Find a roommate</p>
     <h1>Find a roommate</h1>
     <p>Search by name or choose a location, budget, and home preferences to narrow your results.</p>
+    {% if suggestions_mode %}
+      <a class="button-primary roommate-mode-button" href="{% url 'roommate-list' %}">Back to search results</a>
+    {% else %}
+      <a class="button-primary roommate-mode-button" href="{% url 'roommate-list' %}?mode=suggested">Suggested Roommates</a>
+    {% endif %}
   </section>
 
+  {% if not suggestions_mode %}
   <form class="roommate-filters" method="get" aria-label="Filter roommates">
     <div class="filter-field">
       <label for="name">Search by name</label>
@@ -65,11 +71,14 @@
       <button class="button-primary" type="submit">Search</button>
     </div>
   </form>
+  {% endif %}
 
   <section aria-labelledby="roommates-title">
     <div class="roommates-section-heading">
-      <h2 id="roommates-title">Roommates</h2>
-      {% if filters_active %}
+      <h2 id="roommates-title">{% if suggestions_mode %}Suggested Roommates{% else %}Roommates{% endif %}</h2>
+      {% if suggestions_mode %}
+        {% if roommates %}<p>Top {{ roommates|length }} matches, ranked by compatibility</p>{% endif %}
+      {% elif filters_active %}
         <p>{{ roommates|length }} match{{ roommates|pluralize:"es" }} found</p>
       {% else %}
         <p>Showing all roommates</p>
@@ -79,7 +88,7 @@
     {% if roommates %}
       <div class="roommate-grid">
         {% for roommate in roommates %}
-          <article class="roommate-card">
+          <article class="roommate-card{% if suggestions_mode %} roommate-card-suggestion{% endif %}">
             <div class="roommate-avatar" aria-hidden="true">{{ roommate.display_name|first|upper }}</div>
             <div class="roommate-card-body">
               <h3>{{ roommate.display_name }}</h3>
@@ -91,6 +100,9 @@
                 <p class="preference-chip">{{ roommate.user.preference.get_pets_preference_display }}</p>
                 <p class="preference-chip">{{ roommate.user.preference.get_party_preference_display }}</p>
               </div>
+              {% if suggestions_mode %}
+                <p class="compatibility-score{% if roommate.compatibility_percentage >= 80 %} compatibility-score-high{% elif roommate.compatibility_percentage >= 50 %} compatibility-score-medium{% else %} compatibility-score-low{% endif %}">{{ roommate.compatibility_percentage }}% compatible</p>
+              {% endif %}
               <a class="roommate-profile-link" href="{% url 'roommate-detail' roommate.user_id %}">View profile</a>
             </div>
           </article>
@@ -98,9 +110,15 @@
       </div>
     {% else %}
       <section class="empty-roommates" aria-labelledby="empty-title">
-        <h2 id="empty-title">No matches found</h2>
-        <p>{% if filters_active %}Try different filters or clear them to browse everyone.{% else %}There are no other roommate profiles available right now. Please check back later.{% endif %}</p>
-        {% if filters_active %}<a class="button-primary" href="{% url 'roommate-list' %}">Clear all filters</a>{% endif %}
+        {% if suggestions_mode %}
+          <h2 id="empty-title">{% if suggestions_message %}Profile incomplete{% elif no_comparable_preferences %}No comparable preferences{% else %}No suggestions available{% endif %}</h2>
+          <p>{% if suggestions_message %}{{ suggestions_message }}{% elif no_comparable_preferences %}There are no meaningful preference categories to compare right now.{% elif has_eligible_candidates %}No eligible roommates have a positive compatibility score right now. Try again after preferences are updated.{% else %}There are no other eligible roommate profiles to recommend right now. Please check back later.{% endif %}</p>
+          {% if suggestions_message %}<a class="button-primary" href="{% url 'create-profile' %}">Complete your profile</a>{% endif %}
+        {% else %}
+          <h2 id="empty-title">No matches found</h2>
+          <p>{% if filters_active %}Try different filters or clear them to browse everyone.{% else %}There are no other roommate profiles available right now. Please check back later.{% endif %}</p>
+          {% if filters_active %}<a class="button-primary" href="{% url 'roommate-list' %}">Clear all filters</a>{% endif %}
+        {% endif %}
       </section>
     {% endif %}
   </section>

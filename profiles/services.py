@@ -9,6 +9,8 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from accounts.models import Role
+
 from .models import (
     BudgetRange,
     Location,
@@ -18,6 +20,7 @@ from .models import (
     Profile,
     SleepPreference,
 )
+from .matching import compatibility_percentage
 
 
 def list_available_roommates(
@@ -62,6 +65,76 @@ def get_available_roommate(viewer, user_id):
     seeker's own profile or a profile that is no longer available.
     """
     return list_available_roommates(viewer).get(user_id=user_id)
+
+
+class IncompleteRoommateProfile(Exception):
+    pass
+
+
+def _has_complete_matching_data(profile, preference):
+    return bool(
+        profile.display_name.strip()
+        and preference.location_id
+        and preference.budget_range in BudgetRange.values
+        and preference.pets_preference in PetsPreference.values
+        and preference.sleep_preference in SleepPreference.values
+        and preference.party_preference in PartyPreference.values
+    )
+
+
+def get_suggested_roommates(viewer, *, limit=5):
+    """Return up to ``limit`` eligible profiles with their compatibility scores.
+
+    The viewer must have a complete profile and preference record. Ineligible
+    candidate records are skipped; the boolean result flags an all-unscorable
+    candidate set so the UI can avoid presenting misleading percentages.
+    """
+    viewer_profile = Profile.objects.filter(user=viewer).first()
+    viewer_preference = (
+        Preference.objects.select_related("location").filter(user=viewer).first()
+    )
+    if (
+        viewer_profile is None
+        or viewer_preference is None
+        or not _has_complete_matching_data(viewer_profile, viewer_preference)
+    ):
+        raise IncompleteRoommateProfile
+
+    candidates = (
+        Profile.objects.select_related("user__preference__location")
+        .filter(user__role=Role.SEEKER, user__preference__isnull=False)
+        .exclude(user=viewer)
+    )
+    recommendations = []
+    complete_candidate_count = 0
+    comparable_candidate_count = 0
+    for profile in candidates:
+        preference = profile.user.preference
+        if not _has_complete_matching_data(profile, preference):
+            continue
+        complete_candidate_count += 1
+        score = compatibility_percentage(viewer_preference, preference)
+        if score is not None:
+            comparable_candidate_count += 1
+        if score is not None and score > 0:
+            profile.compatibility_percentage = score
+            recommendations.append(profile)
+
+    recommendations.sort(
+        key=lambda profile: (
+            -profile.compatibility_percentage,
+            profile.display_name.casefold(),
+            str(profile.user_id),
+        )
+    )
+    no_comparable_preferences = (
+        complete_candidate_count > 0 and comparable_candidate_count == 0
+    )
+    return (
+        recommendations[:limit],
+        no_comparable_preferences,
+        complete_candidate_count > 0,
+    )
 
 
 class ProfileAlreadyExists(Exception):

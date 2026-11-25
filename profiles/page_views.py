@@ -47,15 +47,32 @@ def _selected_filters(request):
 def roommate_list(request):
     """US-07 / US-12: show browseable roommates and apply selected filters."""
     selected_filters = _selected_filters(request)
-    roommates = services.list_available_roommates(
-        request.user,
-        location_id=selected_filters["location"],
-        budget_range=selected_filters["budget"],
-        pets_preference=selected_filters["pets"],
-        sleep_preference=selected_filters["sleep"],
-        party_preference=selected_filters["parties"],
-        name=selected_filters["name"],
-    )
+    suggestions_mode = request.GET.get("mode") == "suggested"
+    suggestions_message = ""
+    no_comparable_preferences = False
+    has_eligible_candidates = False
+    if suggestions_mode:
+        try:
+            (
+                roommates,
+                no_comparable_preferences,
+                has_eligible_candidates,
+            ) = services.get_suggested_roommates(request.user)
+        except services.IncompleteRoommateProfile:
+            roommates = []
+            suggestions_message = (
+                "Complete your roommate profile and preferences to get suggestions."
+            )
+    else:
+        roommates = services.list_available_roommates(
+            request.user,
+            location_id=selected_filters["location"],
+            budget_range=selected_filters["budget"],
+            pets_preference=selected_filters["pets"],
+            sleep_preference=selected_filters["sleep"],
+            party_preference=selected_filters["parties"],
+            name=selected_filters["name"],
+        )
     return render(
         request,
         "profiles/roommate_list.html",
@@ -67,6 +84,10 @@ def roommate_list(request):
             "sleep_preferences": SleepPreference.choices,
             "party_preferences": PartyPreference.choices,
             "selected_filters": selected_filters,
+            "suggestions_mode": suggestions_mode,
+            "suggestions_message": suggestions_message,
+            "no_comparable_preferences": no_comparable_preferences,
+            "has_eligible_candidates": has_eligible_candidates,
             "filters_active": any(
                 (
                     selected_filters["location"],
