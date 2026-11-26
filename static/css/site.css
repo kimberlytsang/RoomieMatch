@@ -399,6 +399,13 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .empty-conversations p { margin-bottom: 22px; color: #806d66; }
 .chat-layout { display: grid; grid-template-columns: minmax(180px, .29fr) minmax(0, 1fr); min-height: calc(100vh - 150px); border: 1px solid #f3d4c8; background: rgba(255, 253, 251, .28); }
 .chat-sidebar { display: flex; flex-direction: column; min-width: 0; padding: 26px 18px; border-right: 1px solid #f3d4c8; }
+.chat-remove-button { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; padding: 8px; border: 0; border-radius: 4px; color: #806d66; background: transparent; cursor: pointer; }
+.chat-remove-button:hover, .chat-remove-button:focus-visible { color: #c94f45; background: #fff; }
+.message-actions { position: absolute; z-index: 5; top: 100%; left: 0; display: grid; min-width: 140px; padding: 4px; border: 1px solid #ead2c8; border-radius: 6px; color: #3f231a; background: #fffdfb; box-shadow: 0 6px 18px rgba(76, 41, 27, .18); }
+.message-actions[hidden] { display: none; }
+.message-bubble-sent .message-actions { right: 0; left: auto; }
+.message-actions button { padding: 8px 10px; border: 0; border-radius: 4px; color: inherit; background: transparent; font: inherit; font-size: 12px; text-align: left; white-space: nowrap; cursor: pointer; }
+.message-actions button:hover, .message-actions button:focus-visible { background: #fff1ec; }
 .chat-sidebar h1 { margin-bottom: 18px; font-size: 18px; }
 .chat-list { display: grid; gap: 9px; }
 .chat-list-item { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px; border-radius: 4px; color: #3f231a; text-decoration: none; }
@@ -418,7 +425,7 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .chat-main-header a:hover, .chat-main-header a:focus-visible { text-decoration: underline; }
 .message-thread { display: grid; align-content: start; gap: 12px; min-height: 0; padding: 18px 24px; overflow: auto; }
 .message-day { grid-column: 1 / -1; margin: 0 0 4px; color: #806d66; font-size: 10px; text-align: center; }
-.message-bubble { max-width: min(78%, 560px); padding: 11px 13px; border-radius: 4px; background: #fff; }
+.message-bubble { position: relative; max-width: min(78%, 560px); padding: 11px 13px; border-radius: 4px; background: #fff; }
 .message-bubble-sent { justify-self: end; color: #fff; background: #f36c5b; }
 .message-bubble p, .message-bubble small { margin: 0; }
 .message-bubble small { display: block; margin-top: 7px; color: #806d66; font-size: 10px; }

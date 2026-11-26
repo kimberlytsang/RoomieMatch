@@ -26,11 +26,11 @@ def _roommate_detail_context(
 
 def _conversations_for_sidebar(user):
     """Prepare the signed-in user's conversations for the Chats sidebar."""
-    conversations = list(services.list_conversations(user))
+    conversations = services.visible_conversations(user)
     for conversation in conversations:
         conversation.other_user = services.other_participant(conversation, user)
         conversation.other_name = services.participant_name(conversation.other_user)
-        conversation.last_message = conversation.messages.order_by(
+        conversation.last_message = services.visible_messages(conversation, user).order_by(
             "-sent_at", "-message_id"
         ).first()
     return conversations
@@ -44,7 +44,7 @@ def _conversation_context(request, conversation, conversations, *, message_error
         "conversations": conversations,
         "other_user": other_user,
         "other_name": services.participant_name(other_user),
-        "messages": conversation.messages.all().order_by("sent_at", "message_id"),
+        "messages": services.visible_messages(conversation, request.user).order_by("sent_at", "message_id"),
         "message_error": message_error,
         "message_body": message_body,
     }

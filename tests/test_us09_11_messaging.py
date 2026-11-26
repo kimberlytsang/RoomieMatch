@@ -267,3 +267,30 @@ def test_admin_can_message_a_user_from_their_roommate_profile(client, users):
     conversation = Conversation.objects.get()
     assert response.url == f"/conversations/{conversation.conversation_id}/"
     assert Message.objects.filter(conversation=conversation, sender=admin, body="Hello from support").exists()
+
+
+def test_delete_message_is_private_and_only_sender_can_unsend(client, users):
+    conversation, message = messaging_services.send_message(users["alex"], users["maya"], "Hello Maya")
+    url = f"/api/conversations/{conversation.conversation_id}/messages/{message.message_id}/remove"
+    client.force_login(users["maya"])
+    assert client.post(url, {"action": "unsend"}).status_code == 403
+    assert client.post(url, {"action": "delete"}).status_code == 200
+    assert not messaging_services.visible_messages(conversation, users["maya"]).exists()
+    assert messaging_services.visible_messages(conversation, users["alex"]).exists()
+    client.force_login(users["sam"])
+    assert client.post(url, {"action": "unsend"}).status_code == 404
+    client.force_login(users["alex"])
+    assert client.post(url, {"action": "unsend"}).status_code == 200
+    assert not Message.objects.filter(pk=message.pk).exists()
+
+
+def test_delete_chat_is_private_and_new_message_brings_it_back(client, users):
+    conversation, old_message = messaging_services.send_message(users["alex"], users["maya"], "Old message")
+    client.force_login(users["alex"])
+    url = f"/api/conversations/{conversation.conversation_id}/delete"
+    assert client.post(url).status_code == 200
+    assert conversation not in messaging_services.visible_conversations(users["alex"])
+    assert conversation in messaging_services.visible_conversations(users["maya"])
+    messaging_services.send_message(users["maya"], users["alex"], "New message")
+    assert conversation in messaging_services.visible_conversations(users["alex"])
+    assert not messaging_services.visible_messages(conversation, users["alex"]).filter(pk=old_message.pk).exists()

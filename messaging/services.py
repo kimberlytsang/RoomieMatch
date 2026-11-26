@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Max, Q
 
-from .models import Conversation, Message
+from .models import Conversation, ConversationVisibility, Message
 
 
 def _ordered_pair(first_user, second_user):
@@ -48,6 +48,15 @@ def list_conversations(user):
         .annotate(last_message_at=Max("messages__sent_at"))
         .order_by("-last_message_at")
     )
+
+
+def visible_messages(conversation, user):
+    cutoff = ConversationVisibility.objects.filter(conversation=conversation, user=user).values_list("hidden_through_id", flat=True).first() or 0
+    return conversation.messages.filter(message_id__gt=cutoff).exclude(hidden_for=user)
+
+
+def visible_conversations(user):
+    return [conversation for conversation in list_conversations(user) if visible_messages(conversation, user).exists()]
 
 
 def get_conversation_for_user(user, conversation_id):

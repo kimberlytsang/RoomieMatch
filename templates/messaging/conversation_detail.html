@@ -41,6 +41,9 @@
           <h2 id="conversation-title">{{ other_name }}</h2>
           <a href="{% url 'roommate-detail' other_user.user_id %}">View profile</a>
         </div>
+        <button type="button" class="chat-remove-button" data-delete-chat="{% url 'conversation-delete' conversation.conversation_id %}" aria-label="Delete chat" title="Delete chat">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6"/></svg>
+        </button>
       </header>
 
       <div
@@ -49,12 +52,17 @@
         aria-live="polite"
         data-current-user-id="{{ request.user.user_id }}"
         data-messages-url="{% url 'conversation-messages' conversation.conversation_id %}"
+        data-remove-url-template="{% url 'message-remove' conversation.conversation_id 0 %}"
       >
         <p class="message-day">Today</p>
         {% for message in messages %}
-          <article class="message-bubble{% if message.sender_id == request.user.user_id %} message-bubble-sent{% endif %}" data-message-id="{{ message.message_id }}">
+          <article class="message-bubble{% if message.sender_id == request.user.user_id %} message-bubble-sent{% endif %}" data-message-id="{{ message.message_id }}" tabindex="0" aria-label="Message options: right-click, long press, or press Shift+F10">
             <p>{{ message.body }}</p>
             <small>{{ message.sent_at|date:"g:i A" }}</small>
+            <div class="message-actions" hidden>
+              <button type="button" data-message-action="delete">Delete for me</button>
+              {% if message.sender_id == request.user.user_id %}<button type="button" data-message-action="unsend">Unsend</button>{% endif %}
+            </div>
           </article>
         {% endfor %}
       </div>
@@ -126,9 +134,78 @@
 
   const messageThread = document.querySelector(".message-thread");
 
+  async function postAction(url, action) {
+    const body = new URLSearchParams({ action });
+    const response = await fetch(url, { method: "POST", headers: { "X-CSRFToken": csrfToken() }, body });
+    if (!response.ok) throw new Error("Request failed");
+  }
+
+  document.querySelector("[data-delete-chat]").addEventListener("click", async (event) => {
+    if (!window.confirm("Delete this chat for yourself? The other person will still see it.")) return;
+    try {
+      await postAction(event.currentTarget.dataset.deleteChat, "delete");
+      try { sessionStorage.removeItem(draftKey); } catch (_) { /* Storage may be unavailable. */ }
+      window.location.href = "{% url 'conversation-list' %}";
+    } catch (_) { window.alert("Could not delete chat. Please try again."); }
+  });
+
   if (messageThread) {
     const currentUserId = messageThread.dataset.currentUserId;
     const messagesUrl = messageThread.dataset.messagesUrl;
+    let longPressTimer;
+    let suppressClick = false;
+
+    function closeMessageMenus() {
+      messageThread.querySelectorAll(".message-actions:not([hidden])").forEach((menu) => { menu.hidden = true; });
+    }
+
+    function openMessageMenu(bubble) {
+      closeMessageMenus();
+      const menu = bubble.querySelector(".message-actions");
+      menu.hidden = false;
+      menu.querySelector("button").focus({ preventScroll: true });
+    }
+
+    messageThread.addEventListener("contextmenu", (event) => {
+      const bubble = event.target.closest("[data-message-id]");
+      if (!bubble) return;
+      event.preventDefault();
+      openMessageMenu(bubble);
+    });
+    messageThread.addEventListener("keydown", (event) => {
+      const bubble = event.target.closest("[data-message-id]");
+      if (bubble && (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))) {
+        event.preventDefault();
+        openMessageMenu(bubble);
+      } else if (event.key === "Escape") {
+        closeMessageMenus();
+        if (bubble) bubble.focus();
+      }
+    });
+    messageThread.addEventListener("touchstart", (event) => {
+      const bubble = event.target.closest("[data-message-id]");
+      if (!bubble || event.target.closest(".message-actions")) return;
+      longPressTimer = setTimeout(() => { suppressClick = true; openMessageMenu(bubble); }, 600);
+    }, { passive: true });
+    for (const name of ["touchend", "touchmove", "touchcancel"]) {
+      messageThread.addEventListener(name, () => clearTimeout(longPressTimer), { passive: true });
+    }
+    document.addEventListener("click", (event) => {
+      if (suppressClick) { suppressClick = false; return; }
+      if (!event.target.closest(".message-actions")) closeMessageMenus();
+    });
+    messageThread.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-message-action]");
+      if (!button) return;
+      const bubble = button.closest("[data-message-id]");
+      const action = button.dataset.messageAction;
+      const question = action === "unsend" ? "Unsend this message for everyone?" : "Delete this message for yourself?";
+      if (!window.confirm(question)) return;
+      try {
+        await postAction(messageThread.dataset.removeUrlTemplate.replace(/0\/remove$/, `${bubble.dataset.messageId}/remove`), action);
+        bubble.remove();
+      } catch (_) { window.alert("Could not remove message. Please try again."); }
+    });
     const existingMessages = messageThread.querySelectorAll("[data-message-id]");
     let lastMessageId = existingMessages.length
       ? Number(existingMessages[existingMessages.length - 1].dataset.messageId)
@@ -143,6 +220,8 @@
       const bubble = document.createElement("article");
       bubble.className = "message-bubble";
       bubble.dataset.messageId = message.message_id;
+      bubble.tabIndex = 0;
+      bubble.setAttribute("aria-label", "Message options: right-click, long press, or press Shift+F10");
       if (message.sender_id === currentUserId) {
         bubble.classList.add("message-bubble-sent");
       }
@@ -152,6 +231,17 @@
       const timestamp = document.createElement("small");
       timestamp.textContent = message.sent_at_display;
       bubble.append(body, timestamp);
+      const actions = document.createElement("div");
+      actions.className = "message-actions";
+      actions.hidden = true;
+      for (const action of (message.sender_id === currentUserId ? ["delete", "unsend"] : ["delete"])) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.messageAction = action;
+        button.textContent = action === "delete" ? "Delete for me" : "Unsend";
+        actions.append(button);
+      }
+      bubble.append(actions);
       messageThread.append(bubble);
     }
 
@@ -167,6 +257,10 @@
         if (!response.ok) return;
 
         const data = await response.json();
+        const visibleIds = new Set(data.visible_message_ids.map(String));
+        messageThread.querySelectorAll("[data-message-id]").forEach((bubble) => {
+          if (!visibleIds.has(bubble.dataset.messageId)) bubble.remove();
+        });
         for (const message of data.messages) {
           appendMessage(message);
           lastMessageId = message.message_id;
