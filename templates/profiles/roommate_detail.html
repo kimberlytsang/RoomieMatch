@@ -23,24 +23,21 @@
         <div><dt>Pet preference</dt><dd>{{ roommate.user.preference.get_pets_preference_display }}</dd></div>
         <div><dt>Party preference</dt><dd>{{ roommate.user.preference.get_party_preference_display }}</dd></div>
       </dl>
-      {% if not user.is_admin %}
         <div class="send-message-launch">
           <button class="button-primary" type="button" data-open-message-modal>Send a message</button>
-          <p>Send a message to see if you would be good roommates.</p>
+          <p>{% if user.is_admin %}Send a message to contact this user.{% else %}Send a message to see if you would be good roommates.{% endif %}</p>
         </div>
-      {% endif %}
     </div>
   </article>
 </main>
 
-{% if not user.is_admin %}
   <dialog class="message-compose-modal" id="message-compose-modal" aria-labelledby="message-compose-title">
     <form method="post" action="{% url 'send-message' roommate.user_id %}">
       {% csrf_token %}
       <p class="eyebrow">New chat</p>
       <h2 id="message-compose-title">Meet {{ roommate.display_name }}</h2>
       <label for="message-body">Message</label>
-      <textarea id="message-body" name="body" rows="4" maxlength="2000" placeholder="Write a message to {{ roommate.display_name }}..." data-send-on-enter>{% if message_attempted %}{{ message_body }}{% else %}Hi {{ roommate.display_name }}! I am looking for a place in New York too. Want to chat?{% endif %}</textarea>
+      <textarea id="message-body" name="body" rows="4" maxlength="2000" placeholder="Write a message to {{ roommate.display_name }}..." data-send-on-enter>{% if message_attempted %}{{ message_body }}{% elif not user.is_admin %}Hi {{ roommate.display_name }}! I am looking for a place in New York too. Want to chat?{% endif %}</textarea>
       <p class="message-send-hint">Press Enter to send. Shift + Enter for a new line.</p>
       {% if message_error %}<p class="form-message" role="alert">{{ message_error }}</p>{% endif %}
       <div class="message-compose-actions">
@@ -66,5 +63,4 @@
     });
     {% if message_error %}openMessageModal();{% endif %}
   </script>
-{% endif %}
 {% endblock %}

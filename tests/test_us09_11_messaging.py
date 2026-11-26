@@ -250,3 +250,20 @@ def test_admin_can_start_a_chat_from_a_support_request(client, users):
         sender=admin,
         body="I can help with your login issue.",
     ).exists()
+
+
+def test_admin_can_message_a_user_from_their_roommate_profile(client, users):
+    admin = User.objects.create_admin("admin@example.com", "Correct-Horse-42")
+    client.force_login(admin)
+    profile_url = f"/roommates/{users['maya'].user_id}/"
+
+    profile = client.get(profile_url)
+    assert profile.status_code == 200
+    assert b"Send a message" in profile.content
+    assert b"I am looking for a place in New York too" not in profile.content
+
+    response = client.post(f"{profile_url}message/", {"body": "Hello from support"})
+    assert response.status_code == 302
+    conversation = Conversation.objects.get()
+    assert response.url == f"/conversations/{conversation.conversation_id}/"
+    assert Message.objects.filter(conversation=conversation, sender=admin, body="Hello from support").exists()
