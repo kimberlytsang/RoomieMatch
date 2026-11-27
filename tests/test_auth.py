@@ -105,6 +105,15 @@ def test_register_returns_specific_password_requirement(client, db, password, me
     assert User.objects.count() == 0
 
 
+def test_register_accepts_password_at_128_character_limit(client, db):
+    password = "A1!" + "a" * 125
+
+    res = post(client, REGISTER, {"email": "new@example.com", "password": password})
+
+    assert res.status_code == 201
+    assert User.objects.get(email="new@example.com").check_password(password)
+
+
 def test_register_requires_csrf_token(db):
     strict = Client(enforce_csrf_checks=True)
     res = post(strict, REGISTER, {"email": "new@example.com", "password": GOOD_PASSWORD})

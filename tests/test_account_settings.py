@@ -301,6 +301,48 @@ def test_change_password_rejects_weak_new_password(client, db):
     assert "error" in response.json()
 
 
+def test_change_password_rejects_new_password_over_128_characters(client, db):
+    user = User.objects.create_user("roomie@example.com", "Correct-Horse-42")
+    client.force_login(user)
+    new_password = "A1!" + "a" * 126
+
+    response = client.post(
+        "/api/auth/password/change",
+        data=json.dumps({
+            "current_password": "Correct-Horse-42",
+            "new_password": new_password,
+            "confirm_password": new_password,
+        }),
+        content_type="application/json",
+    )
+
+    user.refresh_from_db()
+    assert response.status_code == 422
+    assert response.json()["error"] == "Password must be at most 128 characters."
+    assert user.check_password("Correct-Horse-42")
+
+
+def test_change_password_accepts_new_password_at_128_character_limit(client, db):
+    user = User.objects.create_user("roomie@example.com", "Correct-Horse-42")
+    client.force_login(user)
+    new_password = "A1!" + "a" * 125
+
+    response = client.post(
+        "/api/auth/password/change",
+        data=json.dumps({
+            "current_password": "Correct-Horse-42",
+            "new_password": new_password,
+            "confirm_password": new_password,
+        }),
+        content_type="application/json",
+    )
+
+    user.refresh_from_db()
+    assert response.status_code == 200
+    assert response.json() == {"message": "Password updated successfully."}
+    assert user.check_password(new_password)
+
+
 def test_change_password_requires_a_number_in_new_password(client, db):
     user = User.objects.create_user("roomie@example.com", "Correct-Horse-42")
     client.force_login(user)
