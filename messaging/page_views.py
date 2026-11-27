@@ -41,6 +41,7 @@ def _conversation_context(request, conversation, conversations, *, message_error
     other_user = services.other_participant(conversation, request.user)
     return {
         "conversation": conversation,
+        "is_pinned": any(item.pk == conversation.pk and item.is_pinned for item in conversations),
         "conversations": conversations,
         "other_user": other_user,
         "other_name": services.participant_name(other_user),

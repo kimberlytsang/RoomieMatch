@@ -56,7 +56,11 @@ def visible_messages(conversation, user):
 
 
 def visible_conversations(user):
-    return [conversation for conversation in list_conversations(user) if visible_messages(conversation, user).exists()]
+    pinned = set(ConversationVisibility.objects.filter(user=user, is_pinned=True).values_list("conversation_id", flat=True))
+    conversations = [conversation for conversation in list_conversations(user) if visible_messages(conversation, user).exists()]
+    for conversation in conversations:
+        conversation.is_pinned = conversation.pk in pinned
+    return sorted(conversations, key=lambda conversation: not conversation.is_pinned)
 
 
 def get_conversation_for_user(user, conversation_id):

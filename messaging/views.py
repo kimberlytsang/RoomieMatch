@@ -61,6 +61,7 @@ def conversation_sidebar(request):
         conversations.append(
             {
                 "conversation_id": str(conversation.conversation_id),
+                "is_pinned": conversation.is_pinned,
                 "other_name": services.participant_name(other_user),
                 "last_message": last_message.body if last_message else "Start a conversation",
                 "url": reverse(
@@ -74,6 +75,24 @@ def conversation_sidebar(request):
             }
         )
     return JsonResponse({"conversations": conversations})
+
+
+@require_POST
+@authenticated_only
+def pin_conversation(request, conversation_id):
+    try:
+        conversation = services.get_conversation_for_user(request.user, conversation_id)
+    except Conversation.DoesNotExist:
+        return error(404, "Conversation unavailable.")
+    action = request.POST.get("action")
+    if action not in ("pin", "unpin"):
+        return error(400, "Invalid action.")
+    if not services.visible_messages(conversation, request.user).exists():
+        return error(404, "Conversation unavailable.")
+    visibility, _ = ConversationVisibility.objects.get_or_create(conversation=conversation, user=request.user)
+    visibility.is_pinned = action == "pin"
+    visibility.save(update_fields=["is_pinned"])
+    return JsonResponse({"is_pinned": visibility.is_pinned})
 
 
 @require_POST
@@ -103,5 +122,5 @@ def remove_conversation(request, conversation_id):
     except Conversation.DoesNotExist:
         return error(404, "Conversation unavailable.")
     latest = conversation.messages.aggregate(last=Max("message_id"))["last"] or 0
-    ConversationVisibility.objects.update_or_create(conversation=conversation, user=request.user, defaults={"hidden_through_id": latest})
+    ConversationVisibility.objects.update_or_create(conversation=conversation, user=request.user, defaults={"hidden_through_id": latest, "is_pinned": False})
     return JsonResponse({"ok": True})

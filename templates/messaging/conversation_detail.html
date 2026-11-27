@@ -7,6 +7,7 @@
   <section class="chat-layout" aria-label="Chats">
     <aside class="chat-sidebar">
       <h1>Chats</h1>
+      <p class="chat-feature-hint">Pin a chat to keep it at the top. Right-click or long-press a message for options.</p>
       <nav
         class="chat-list"
         aria-label="Your conversations"
@@ -21,7 +22,7 @@
               <span class="conversation-avatar" aria-hidden="true">{{ item.other_name|first|upper }}</span>
             {% endif %}
             <span class="chat-list-copy">
-              <strong>{{ item.other_name }}</strong>
+              <strong>{{ item.other_name }}{% if item.is_pinned %} <span aria-label="Pinned">📌</span>{% endif %}</strong>
               <small>{{ item.last_message.body|default:"Start a conversation"|truncatechars:42 }}</small>
             </span>
           </a>
@@ -41,9 +42,8 @@
           <h2 id="conversation-title">{{ other_name }}</h2>
           <a href="{% url 'roommate-detail' other_user.user_id %}">View profile</a>
         </div>
-        <button type="button" class="chat-remove-button" data-delete-chat="{% url 'conversation-delete' conversation.conversation_id %}" aria-label="Delete chat" title="Delete chat">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6"/></svg>
-        </button>
+        <button type="button" class="chat-pin-button{% if is_pinned %} is-pinned{% endif %}" data-pin-chat="{% url 'conversation-pin' conversation.conversation_id %}" aria-pressed="{% if is_pinned %}true{% else %}false{% endif %}" aria-label="{% if is_pinned %}Unpin chat{% else %}Pin chat{% endif %}" title="{% if is_pinned %}Unpin chat{% else %}Pin chat{% endif %}">📌</button>
+        <button type="button" class="chat-remove-button" data-delete-chat="{% url 'conversation-delete' conversation.conversation_id %}">Hide conversation</button>
       </header>
 
       <div
@@ -140,13 +140,29 @@
     if (!response.ok) throw new Error("Request failed");
   }
 
+  let refreshChatList = async () => {};
+  document.querySelector("[data-pin-chat]").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    const isPinned = button.getAttribute("aria-pressed") === "true";
+    button.disabled = true;
+    try {
+      await postAction(button.dataset.pinChat, isPinned ? "unpin" : "pin");
+      button.setAttribute("aria-pressed", String(!isPinned));
+      button.classList.toggle("is-pinned", !isPinned);
+      button.setAttribute("aria-label", isPinned ? "Pin chat" : "Unpin chat");
+      button.title = isPinned ? "Pin chat" : "Unpin chat";
+      await refreshChatList();
+    } catch (_) { window.alert("Could not update pin. Please try again."); }
+    finally { button.disabled = false; }
+  });
+
   document.querySelector("[data-delete-chat]").addEventListener("click", async (event) => {
-    if (!window.confirm("Delete this chat for yourself? The other person will still see it.")) return;
+    if (!window.confirm("Hide this conversation for yourself? The other person will still see it. It will reappear when a new message is sent.")) return;
     try {
       await postAction(event.currentTarget.dataset.deleteChat, "delete");
       try { sessionStorage.removeItem(draftKey); } catch (_) { /* Storage may be unavailable. */ }
       window.location.href = "{% url 'conversation-list' %}";
-    } catch (_) { window.alert("Could not delete chat. Please try again."); }
+    } catch (_) { window.alert("Could not hide conversation. Please try again."); }
   });
 
   if (messageThread) {
@@ -314,6 +330,12 @@
       copy.className = "chat-list-copy";
       const name = document.createElement("strong");
       name.textContent = item.other_name;
+      if (item.is_pinned) {
+        const pin = document.createElement("span");
+        pin.setAttribute("aria-label", "Pinned");
+        pin.textContent = " 📌";
+        name.append(pin);
+      }
       const preview = document.createElement("small");
       preview.textContent = item.last_message;
       copy.append(name, preview);
@@ -335,6 +357,7 @@
       }
     }
 
+    refreshChatList = pollConversationList;
     pollConversationList();
     window.setInterval(pollConversationList, 5000);
     document.addEventListener("visibilitychange", () => {

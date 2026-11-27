@@ -51,6 +51,7 @@ class ConversationVisibility(models.Model):
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     hidden_through_id = models.BigIntegerField(default=0)
+    is_pinned = models.BooleanField(default=False)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["conversation", "user"], name="unique_conversation_visibility")]

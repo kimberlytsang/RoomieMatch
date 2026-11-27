@@ -186,6 +186,7 @@ def test_participant_can_poll_their_conversation_sidebar(client, users):
     assert conversations == [
         {
             "conversation_id": str(conversation.conversation_id),
+            "is_pinned": False,
             "other_name": "Maya",
             "last_message": "Hi Alex!",
             "url": f"/conversations/{conversation.conversation_id}/",
@@ -294,3 +295,21 @@ def test_delete_chat_is_private_and_new_message_brings_it_back(client, users):
     messaging_services.send_message(users["maya"], users["alex"], "New message")
     assert conversation in messaging_services.visible_conversations(users["alex"])
     assert not messaging_services.visible_messages(conversation, users["alex"]).filter(pk=old_message.pk).exists()
+
+
+def test_pinning_is_private_and_sorts_conversations_first(client, users):
+    older, _ = messaging_services.send_message(users["alex"], users["maya"], "Older")
+    newer, _ = messaging_services.send_message(users["alex"], users["sam"], "Newer")
+    url = f"/api/conversations/{older.conversation_id}/pin"
+    client.force_login(users["sam"])
+    assert client.post(url, {"action": "pin"}).status_code == 404
+    client.force_login(users["alex"])
+    assert client.post(url, {"action": "pin"}).json()["is_pinned"] is True
+    chats = client.get("/api/conversations/sidebar").json()["conversations"]
+    assert [item["conversation_id"] for item in chats] == [str(older.pk), str(newer.pk)]
+    assert chats[0]["is_pinned"] is True
+    client.force_login(users["maya"])
+    assert client.get("/api/conversations/sidebar").json()["conversations"][0]["is_pinned"] is False
+    client.force_login(users["alex"])
+    assert client.post(url, {"action": "unpin"}).json()["is_pinned"] is False
+    assert client.get("/api/conversations/sidebar").json()["conversations"][0]["conversation_id"] == str(newer.pk)
