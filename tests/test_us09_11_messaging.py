@@ -179,6 +179,24 @@ def test_empty_reply_shows_message_prompt_and_is_not_saved(client, users):
     assert Message.objects.filter(conversation=conversation).count() == 1
 
 
+def test_hide_conversation_shows_styled_confirmation_prompt(client, users):
+    conversation, _ = messaging_services.send_message(
+        users["alex"], users["maya"], "Hi Maya!"
+    )
+    client.force_login(users["alex"])
+
+    response = client.get(f"/conversations/{conversation.conversation_id}/")
+
+    assert response.status_code == 200
+    assert (
+        b"Hide this conversation for yourself? The other person will still see the "
+        b"conversation. The chat will reappear when a new message is sent."
+        in response.content
+    )
+    assert b'data-confirm-hide-yes>Yes</button>' in response.content
+    assert b'data-confirm-hide-no>No</button>' in response.content
+
+
 def test_no_conversations_shows_empty_state(client, users):
     client.force_login(users["alex"])
 

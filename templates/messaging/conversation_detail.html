@@ -81,6 +81,16 @@
   </section>
 </main>
 
+<dialog class="message-error-modal" id="hide-conversation-confirmation" aria-labelledby="hide-conversation-confirmation-title">
+  <div>
+    <p id="hide-conversation-confirmation-title">Hide this conversation for yourself? The other person will still see the conversation. The chat will reappear when a new message is sent.</p>
+    <div class="chat-confirmation-actions">
+      <button class="button-primary" type="button" data-confirm-hide-yes>Yes</button>
+      <button class="my-profile-secondary" type="button" data-confirm-hide-no>No</button>
+    </div>
+  </div>
+</dialog>
+
 {% if message_error %}
   <dialog class="message-error-modal" id="message-error-modal" aria-labelledby="message-error-title">
     <div>
@@ -143,6 +153,29 @@
     if (!response.ok) throw new Error("Request failed");
   }
 
+  const hideConversationButton = document.querySelector("[data-delete-chat]");
+  const hideConversationDialog = document.getElementById("hide-conversation-confirmation");
+  hideConversationButton.addEventListener("click", () => hideConversationDialog.showModal());
+
+  document.querySelector("[data-confirm-hide-no]").addEventListener("click", () => {
+    hideConversationDialog.close();
+  });
+
+  const confirmHideConversationButton = document.querySelector("[data-confirm-hide-yes]");
+  confirmHideConversationButton.addEventListener("click", async () => {
+    confirmHideConversationButton.disabled = true;
+    try {
+      await postAction(hideConversationButton.dataset.deleteChat, "delete");
+      try { sessionStorage.removeItem(draftKey); } catch (_) { /* Storage may be unavailable. */ }
+      window.location.href = "{% url 'conversation-list' %}";
+    } catch (_) {
+      hideConversationDialog.close();
+      window.alert("Could not hide conversation. Please try again.");
+    } finally {
+      confirmHideConversationButton.disabled = false;
+    }
+  });
+
   let refreshChatList = async () => {};
   document.querySelector("[data-pin-chat]").addEventListener("click", async (event) => {
     const button = event.currentTarget;
@@ -157,15 +190,6 @@
       await refreshChatList();
     } catch (_) { window.alert("Could not update pin. Please try again."); }
     finally { button.disabled = false; }
-  });
-
-  document.querySelector("[data-delete-chat]").addEventListener("click", async (event) => {
-    if (!window.confirm("Hide this conversation for yourself? The other person will still see it. It will reappear when a new message is sent.")) return;
-    try {
-      await postAction(event.currentTarget.dataset.deleteChat, "delete");
-      try { sessionStorage.removeItem(draftKey); } catch (_) { /* Storage may be unavailable. */ }
-      window.location.href = "{% url 'conversation-list' %}";
-    } catch (_) { window.alert("Could not hide conversation. Please try again."); }
   });
 
   if (messageThread) {
