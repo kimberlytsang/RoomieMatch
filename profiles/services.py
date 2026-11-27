@@ -38,6 +38,7 @@ def list_available_roommates(
     roommates = (
         Profile.objects.select_related("user__preference__location")
         .filter(user__preference__isnull=False)
+        .filter(show_in_roommate_search=True)
         .exclude(user=viewer)
     )
     if location_id is not None:
@@ -148,7 +149,11 @@ def create_profile(
             defaults=preferences,
         )
         return Profile.objects.create(
-            user=user, display_name=display_name, bio=bio, profile_picture=picture,
+            user=user,
+            display_name=display_name,
+            bio=bio,
+            profile_picture=picture,
+            show_in_roommate_search=True,
         )
 
 
@@ -216,6 +221,10 @@ def update_profile(user, changes, *, profile_picture=None, remove_picture=False)
 
         for field, value in cleaned.items():
             setattr(profile, field, value)
+
+        if user.is_admin:
+            cleaned["show_in_roommate_search"] = True
+            profile.show_in_roommate_search = True
 
         profile.save(update_fields=list(cleaned))
         return profile

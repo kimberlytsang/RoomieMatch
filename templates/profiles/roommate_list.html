@@ -80,7 +80,11 @@
       <div class="roommate-grid">
         {% for roommate in roommates %}
           <article class="roommate-card">
-            <div class="roommate-avatar" aria-hidden="true">{{ roommate.display_name|first|upper }}</div>
+            {% if roommate.profile_picture %}
+              <img class="roommate-avatar roommate-avatar-image" src="{% url 'profile-photo' roommate.user_id %}" alt="{{ roommate.display_name }}'s profile photo">
+            {% else %}
+              <div class="roommate-avatar" aria-hidden="true">{{ roommate.display_name|first|upper }}</div>
+            {% endif %}
             <div class="roommate-card-body">
               <h3>{{ roommate.display_name }}</h3>
               <p class="roommate-location">{{ roommate.user.preference.location }}</p>

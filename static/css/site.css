@@ -324,7 +324,7 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .delete-account-modal-content .delete-account-warning { margin-bottom: 8px; color: #b94339; font-size: 12px; font-weight: 700; text-transform: uppercase; }
 .delete-account-modal-content .delete-account-error { margin: 0 0 16px; color: #a3332d; }
 .delete-account-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-.button-secondary { min-height: 42px; padding: 0 18px; border: 1px solid #d5b9af; border-radius: 5px; color: #3f231a; background: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.button-secondary { display: inline-flex; min-height: 42px; justify-content: center; align-items: center; padding: 0 18px; border: 1px solid #d5b9af; border-radius: 5px; color: #3f231a; background: #fff; font: inherit; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; }
 .button-secondary:hover { background: #fff1ec; }
 .roommate-heading { max-width: 610px; margin-bottom: 38px; }
 .roommate-heading h1, .roommate-detail-card h1 { margin-bottom: 10px; font-size: clamp(38px, 5vw, 58px); font-weight: 700; line-height: 1; }
@@ -350,6 +350,7 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .roommate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 20px; }
 .roommate-card { display: flex; overflow: hidden; flex-direction: column; border: 1px solid #f2d4ca; border-radius: 7px; background: rgba(255, 253, 251, .98); box-shadow: 0 16px 32px rgba(9, 10, 20, .1); }
 .roommate-avatar { display: grid; height: 168px; place-items: center; color: #fff; background: linear-gradient(135deg, #ff8f82, #6d71aa); font-family: "Outfit", "DM Sans", sans-serif; font-size: 58px; font-weight: 700; }
+.roommate-avatar-image { display: block; width: 100%; object-fit: cover; }
 .roommate-card-body { display: flex; flex: 1; flex-direction: column; padding: 18px; color: var(--text); }
 .roommate-card h3 { margin-bottom: 4px; font-size: 21px; }
 .roommate-location { margin-bottom: 12px; color: #df5c50; font-size: 12px; font-weight: 700; }
@@ -373,6 +374,88 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
 .roommate-profile-facts div { display: grid; grid-template-columns: minmax(120px, .9fr) minmax(0, 1.3fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid #f5dfd8; }
 .roommate-profile-facts dt { color: #6a5147; font-size: 13px; font-weight: 700; }
 .roommate-profile-facts dd { margin: 0; color: #3f231a; font-size: 13px; }
+.send-message-launch { margin-top: 24px; }
+.send-message-launch .button-primary { min-width: 190px; }
+.send-message-launch p { margin: 5px 0 0; color: #806d66; font-size: 11px; }
+.message-compose-modal { width: min(100% - 36px, 560px); padding: 0; border: 0; border-radius: 7px; color: #3f231a; background: #fffdfb; box-shadow: 0 24px 70px rgba(9, 10, 20, .3); }
+.message-compose-modal::backdrop { background: rgba(32, 33, 54, .55); }
+.message-compose-modal form { display: grid; gap: 12px; padding: 42px 34px 34px; }
+.message-compose-modal .eyebrow { margin: 0; text-align: center; }
+.message-compose-modal h2 { margin: -8px 0 10px; font-size: 30px; text-align: center; }
+.message-compose-modal label { color: #3f231a; font-size: 12px; font-weight: 700; }
+.message-compose-modal textarea { display: block; width: 100%; min-height: 112px; padding: 12px; border: 1px solid #f2b9aa; border-radius: 5px; color: #3f231a; background: #fff; color-scheme: light; font: inherit; resize: vertical; }
+.message-compose-modal textarea::placeholder { color: #806d66; opacity: 1; }
+.message-send-hint { margin: -5px 0 0; color: #806d66; font-size: 11px; }
+.message-compose-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 2px; }
+.message-compose-actions .button-primary, .message-compose-actions .button-secondary { width: 100%; }
+.support-message-compose { max-width: 620px; text-align: left; }
+.support-message-form { display: grid; gap: 10px; margin-top: 22px; text-align: left; }
+.support-message-form label { color: #3f231a; font-size: 12px; font-weight: 700; }
+.support-message-form textarea { width: 100%; min-height: 112px; padding: 12px; border: 1px solid #f2b9aa; border-radius: 5px; color: #3f231a; background: #fff; font: inherit; resize: vertical; }
+.conversation-avatar { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #ff8f82, #6d71aa); font-weight: 700; }
+.conversation-avatar-image { display: block; object-fit: cover; }
+.empty-conversations { display: grid; min-height: calc(100vh - 250px); place-content: center; max-width: 620px; margin: 0 auto; padding: 42px 28px; text-align: center; }
+.empty-conversations h1, .empty-conversations h2 { margin-bottom: 8px; }
+.empty-conversations p { margin-bottom: 22px; color: #806d66; }
+.chat-layout { display: grid; grid-template-columns: minmax(180px, .29fr) minmax(0, 1fr); min-height: calc(100vh - 150px); border: 1px solid #f3d4c8; background: rgba(255, 253, 251, .28); }
+.chat-sidebar { display: flex; flex-direction: column; min-width: 0; padding: 26px 18px; border-right: 1px solid #f3d4c8; }
+.chat-remove-button { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; padding: 8px; border: 0; border-radius: 4px; color: #806d66; background: transparent; font: inherit; font-size: 11px; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.chat-remove-button:hover, .chat-remove-button:focus-visible { color: #c94f45; background: #fff; }
+.message-actions { position: absolute; z-index: 5; top: 100%; left: 0; display: grid; min-width: 140px; padding: 4px; border: 1px solid #ead2c8; border-radius: 6px; color: #3f231a; background: #fffdfb; box-shadow: 0 6px 18px rgba(76, 41, 27, .18); }
+.message-actions[hidden] { display: none; }
+.message-bubble-sent .message-actions { right: 0; left: auto; }
+.message-actions button { padding: 8px 10px; border: 0; border-radius: 4px; color: inherit; background: transparent; font: inherit; font-size: 12px; text-align: left; white-space: nowrap; cursor: pointer; }
+.message-actions button:hover, .message-actions button:focus-visible { background: #fff1ec; }
+.chat-sidebar h1 { margin: 0 0 6px; font-size: 18px; }
+.chat-feature-hint { margin: 0 0 16px; color: #806d66; font-size: 11px; line-height: 1.5; }
+.chat-pin-button { margin-left: auto; padding: 8px; border: 0; border-radius: 4px; background: transparent; opacity: .55; cursor: pointer; }
+.chat-pin-button.is-pinned, .chat-pin-button:hover, .chat-pin-button:focus-visible { opacity: 1; background: #fff; }
+.chat-pin-button + .chat-remove-button { margin-left: 0; }
+.chat-sidebar-heading { display: flex; align-items: center; gap: 8px; }
+.chat-sidebar-heading h1 { min-width: 0; }
+.empty-conversations-heading { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.empty-conversations-heading .chat-remove-button { margin-left: 0; }
+.chat-list { display: grid; gap: 9px; }
+.hidden-chat-list-item { align-items: start; }
+.hidden-chat-list-item form { margin-top: 6px; }
+.hidden-chat-list-item .chat-remove-button { margin-left: 0; padding: 4px 0; }
+.hidden-conversations-main { align-items: center; justify-content: center; padding: 24px; }
+.unhide-confirmation-actions { display: flex; justify-content: center; gap: 12px; }
+.message-error-modal .unhide-confirmation-actions button { flex: 1 1 0; min-width: 0; min-height: 46px; padding: 0 22px; }
+.chat-list-item { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: center; padding: 10px; border-radius: 4px; color: #3f231a; text-decoration: none; }
+.chat-list-item:hover, .chat-list-item:focus-visible, .chat-list-item.is-active { background: #fff; box-shadow: 0 4px 12px rgba(76, 41, 27, .06); }
+.chat-list-item .conversation-avatar { width: 34px; height: 34px; font-size: 12px; }
+.chat-list-copy { min-width: 0; }
+.chat-list-copy strong, .chat-list-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-list-copy strong { font-size: 12px; }
+.chat-list-copy small, .chat-find-link { color: #806d66; font-size: 10px; }
+.chat-find-link { margin-top: 20px; text-decoration: none; }
+.chat-find-link:hover, .chat-find-link:focus-visible { color: #c94f45; text-decoration: underline; }
+.chat-main { display: grid; min-width: 0; grid-template-rows: auto minmax(350px, 1fr) auto; }
+.chat-main-header { display: flex; align-items: center; gap: 12px; padding: 18px 24px; border-bottom: 1px solid #f3d4c8; }
+.chat-main-header .conversation-avatar { width: 34px; height: 34px; font-size: 12px; }
+.chat-main-header h2 { margin: 0; font-size: 18px; }
+.chat-main-header a { display: inline-block; color: var(--coral); font-size: 10px; text-decoration: none; }
+.chat-main-header a:hover, .chat-main-header a:focus-visible { text-decoration: underline; }
+.message-thread { display: grid; align-content: start; gap: 12px; min-height: 0; padding: 18px 24px; overflow: auto; }
+.message-day { grid-column: 1 / -1; margin: 0 0 4px; color: #806d66; font-size: 10px; text-align: center; }
+.message-bubble { position: relative; max-width: min(78%, 560px); padding: 11px 13px; border-radius: 4px; background: #fff; }
+.message-bubble-sent { justify-self: end; color: #fff; background: #f36c5b; }
+.message-bubble p, .message-bubble small { margin: 0; }
+.message-bubble small { display: block; margin-top: 7px; color: #806d66; font-size: 10px; }
+.message-bubble-sent small { color: #fff6f2; text-align: right; }
+.chat-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; align-items: end; padding: 14px 24px; border-top: 1px solid #f3d4c8; }
+.chat-composer label { grid-column: 1 / -1; color: #3f231a; font-size: 11px; font-weight: 700; }
+.chat-composer textarea { display: block; width: 100%; min-height: 70px; padding: 11px 12px; border: 1px solid #f2b9aa; border-radius: 4px; color: #3f231a; background: #fff; color-scheme: light; font: inherit; font-size: 12px; resize: vertical; }
+.chat-composer textarea::placeholder { color: #806d66; opacity: 1; }
+.chat-composer .message-send-hint { grid-column: 1 / -1; }
+.chat-composer .button-primary { min-width: 96px; min-height: 42px; }
+.message-error-modal { width: min(100% - 36px, 480px); padding: 0; border: 0; border-radius: 7px; color: #3f231a; background: #fffdfb; box-shadow: 0 24px 70px rgba(9, 10, 20, .3); text-align: center; }
+.message-error-modal::backdrop { background: rgba(32, 33, 54, .55); }
+.message-error-modal > div { padding: 40px 36px; }
+.message-error-modal h2 { margin: 0 0 8px; font-size: 28px; }
+.message-error-modal p:not(.eyebrow) { margin-bottom: 24px; color: #806d66; }
+.message-error-modal .button-primary { min-width: 170px; }
 .roommate-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 22px 0 0; }
 .roommate-facts div { padding: 12px; border-radius: 4px; background: #fff4f0; }
 .roommate-facts dt { margin-bottom: 3px; color: #8b8382; font-size: 10px; font-weight: 700; text-transform: uppercase; }
@@ -446,6 +529,16 @@ body:has(.roommate-page) .account-menu-panel button:hover, body:has(.roommate-pa
   .roommate-avatar-large { width: min(100%, 260px); }
   .roommate-profile-facts div { grid-template-columns: 1fr; gap: 3px; }
   .roommate-facts { grid-template-columns: 1fr; }
+  .conversation-detail-page { padding-right: 0; padding-left: 0; }
+  .chat-layout { grid-template-columns: 1fr; }
+  .chat-sidebar { padding: 18px; border-right: 0; border-bottom: 1px solid #f3d4c8; }
+  .chat-list { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .chat-find-link { margin-top: 12px; }
+  .chat-main { grid-template-rows: auto minmax(320px, 1fr) auto; }
+  .chat-main-header, .message-thread, .chat-composer { padding-right: 18px; padding-left: 18px; }
+  .message-bubble { max-width: 90%; }
+  .chat-composer { grid-template-columns: 1fr; }
+  .chat-composer .button-primary { width: 100%; }
   .account-settings-layout { grid-template-columns: 1fr; }
   .account-settings-card { padding: 20px; }
   .delete-account-modal-content { padding: 24px; }

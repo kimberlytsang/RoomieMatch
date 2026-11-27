@@ -9,6 +9,7 @@ from django.urls import reverse
 from PIL import Image
 
 from accounts.models import User
+from messaging import services as messaging_services
 from profiles import services
 from profiles.models import (
     BudgetRange, Location, PartyPreference, PetsPreference, Preference, Profile, SleepPreference,
@@ -89,6 +90,26 @@ def test_no_photo_uses_name_initial(signed_in, user, details, name, initial):
     assert b"Edit picture" in page.content
     assert b'name="remove_picture"' not in page.content
     assert signed_in.get(reverse("profile-photo", args=[user.pk])).status_code == 404
+
+
+def test_uploaded_roommate_photo_appears_in_browse_profile_and_chat(signed_in, user, details):
+    roommate_user = User.objects.create_user("roommate@example.com", "Correct-Horse-42")
+    services.create_profile(
+        roommate_user,
+        **{**details, "display_name": "Roommate"},
+        profile_picture=photo_upload("JPEG", "navy"),
+    )
+    conversation, _ = messaging_services.send_message(user, roommate_user, "Hi there!")
+    photo_url = reverse("profile-photo", args=[roommate_user.pk])
+
+    for page_url in (
+        reverse("roommate-list"),
+        reverse("roommate-detail", args=[roommate_user.pk]),
+        reverse("conversation-detail", args=[conversation.conversation_id]),
+    ):
+        response = signed_in.get(page_url)
+        assert response.status_code == 200
+        assert f'src="{photo_url}"'.encode() in response.content
 
 
 @pytest.mark.parametrize("image_format", ["JPEG", "PNG"])
@@ -264,6 +285,25 @@ def test_photo_visibility_matches_roommate_visibility(signed_in, user, profile, 
     # Owners can still read their own photos while completing preferences.
     signed_in.force_login(other)
     assert signed_in.get(url).content == image_bytes("JPEG")
+
+
+def test_hidden_admin_photo_is_available_to_conversation_participant(signed_in, user):
+    admin = User.objects.create_admin("admin-avatar@example.com", "Correct-Horse-42")
+    Profile.objects.create(
+        user=admin,
+        display_name="Admin",
+        profile_picture=image_bytes("JPEG", "navy"),
+        show_in_roommate_search=False,
+    )
+    url = reverse("profile-photo", args=[admin.pk])
+
+    assert signed_in.get(url).status_code == 404
+
+    messaging_services.send_message(user, admin, "Hello")
+
+    response = signed_in.get(url)
+    assert response.status_code == 200
+    assert response.content == image_bytes("JPEG", "navy")
 
 
 def test_missing_profile_photo_returns_404(signed_in):

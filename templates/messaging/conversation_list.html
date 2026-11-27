@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Chats - RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page conversations-page">
+  <section class="empty-conversations" aria-labelledby="empty-conversations-title" data-conversations-url="{% url 'conversation-sidebar' %}">
+    <div class="empty-conversations-heading">
+      <h1 id="empty-conversations-title">Your chats</h1>
+      <a class="chat-remove-button" href="{% url 'hidden-conversations' %}">Hidden Chats</a>
+    </div>
+    {% if user.is_admin %}
+      <p>You have no chats yet. Open a support request to contact a user.</p>
+      <a class="button-primary" href="{% url 'app-admin' %}">View support requests</a>
+    {% else %}
+      <p>You have no chats yet. Find a roommate and send them a message.</p>
+      <a class="button-primary" href="{% url 'roommate-list' %}">Find roommates</a>
+    {% endif %}
+  </section>
+</main>
+<script>
+  const emptyConversations = document.querySelector("[data-conversations-url]");
+
+  async function openFirstNewConversation() {
+    try {
+      const response = await fetch(emptyConversations.dataset.conversationsUrl, {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.conversations.length) window.location.assign(data.conversations[0].url);
+    } catch (_) {
+      // The empty state remains available if a temporary request fails.
+    }
+  }
+
+  window.setInterval(openFirstNewConversation, 5000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) openFirstNewConversation();
+  });
+</script>
+{% endblock %}

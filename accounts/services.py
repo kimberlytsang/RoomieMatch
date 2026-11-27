@@ -103,6 +103,11 @@ def get_support_requests():
     return SupportRequest.objects.order_by("id")
 
 
+def get_user_by_email(email):
+    """Return the account matching a support request's recorded email, if present."""
+    return User.objects.filter(email__iexact=email).first()
+
+
 class SupportRequestNotFound(Exception):
     pass
 

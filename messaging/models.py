@@ -37,6 +37,7 @@ class Message(models.Model):
     )  # must be one of the conversation's two users (checked in the service layer)
     body = models.TextField()
     sent_at = models.DateTimeField(auto_now_add=True)
+    hidden_for = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="hidden_messages", blank=True)
 
     class Meta:
         db_table = "messages"
@@ -44,3 +45,13 @@ class Message(models.Model):
         constraints = [
             models.CheckConstraint(condition=Q(body__regex=r"\S"), name="message_body_not_blank"),
         ]
+
+
+class ConversationVisibility(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    hidden_through_id = models.BigIntegerField(default=0)
+    is_pinned = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["conversation", "user"], name="unique_conversation_visibility")]

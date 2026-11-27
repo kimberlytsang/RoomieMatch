@@ -33,8 +33,9 @@ def client():
 
 def test_admin_access(client, db):
     row_count = SupportRequest.objects.count()
+    requester = User.objects.create_user("roomie@example.com", "Correct-Horse-42")
     for i in range(3):
-        SupportRequest.objects.create(subject="Test", body="Help", user="roomie@example.com")
+        SupportRequest.objects.create(subject="Test", body="Help", user=requester.email)
     admin = User.objects.create_admin("testAdmin@example.com", "Correct-Horse-42")
     client.force_login(admin)
     response = client.get('/app-admin/')
@@ -45,6 +46,9 @@ def test_admin_access(client, db):
     assert b"Open" in response.content
     assert b'id="save-support-statuses"' in response.content
     assert b'<button type="submit">Save</button>' not in response.content
+    assert b"Message user" in response.content
+    assert b">Chats<" in response.content
+    assert b">Support requests<" in response.content
 
 def test_admin_access_no_auth(client):
     response = client.get('/app-admin/')

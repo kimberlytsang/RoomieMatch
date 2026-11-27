@@ -89,6 +89,7 @@ class Profile(models.Model):
     display_name = models.CharField(max_length=50)
     profile_picture = models.BinaryField(null=True, blank=True)  # JPEG/PNG bytes, 2 MB max (enforced in service)
     bio = models.CharField(max_length=500, blank=True)
+    show_in_roommate_search = models.BooleanField(default=True)
 
     class Meta:
         db_table = "profiles"

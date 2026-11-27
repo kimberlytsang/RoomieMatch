@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Conversation unavailable - RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page">
+  <section class="empty-conversations" aria-labelledby="unavailable-title">
+    <h1 id="unavailable-title">Conversation unavailable</h1>
+    <p>This conversation does not exist or is not available to your account.</p>
+    <a class="button-primary" href="{% url 'conversation-list' %}">Back to chats</a>
+  </section>
+</main>
+{% endblock %}
