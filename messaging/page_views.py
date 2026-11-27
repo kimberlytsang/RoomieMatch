@@ -92,6 +92,27 @@ def conversation_list(request):
 
 
 @login_required(login_url="login-page")
+def hidden_conversation_list(request):
+    """Show conversations the signed-in user has hidden."""
+    return render(
+        request,
+        "messaging/hidden_conversations.html",
+        {"conversations": services.hidden_conversations(request.user)},
+    )
+
+
+@login_required(login_url="login-page")
+@require_POST
+def unhide_conversation(request, conversation_id):
+    """Restore a conversation to the signed-in user's chat list."""
+    try:
+        services.unhide_conversation(request.user, conversation_id)
+    except Conversation.DoesNotExist:
+        return render(request, "messaging/conversation_unavailable.html", status=404)
+    return redirect("hidden-conversations")
+
+
+@login_required(login_url="login-page")
 @require_http_methods(["GET", "POST"])
 def conversation_detail(request, conversation_id):
     """US-11: show a conversation and allow either participant to reply."""

@@ -52,6 +52,41 @@ def test_roommate_list_shows_empty_state_when_no_one_else_is_available(client, l
     assert b"No matches found" in response.content
 
 
+def test_admin_profile_is_hidden_until_admin_saves_it(client, location):
+    viewer = make_roommate("viewer@example.com", "Viewer", location)
+    admin = User.objects.create_admin("admin@example.com", "Correct-Horse-42")
+    profile = Profile.objects.create(
+        user=admin,
+        display_name="Admin",
+        show_in_roommate_search=False,
+    )
+    Preference.objects.create(
+        user=admin,
+        location=location,
+        budget_range=BudgetRange.B2501_3000,
+        pets_preference=PetsPreference.NO_PETS,
+    )
+    client.force_login(viewer)
+
+    hidden_list = client.get("/roommates/")
+    hidden_detail = client.get(f"/roommates/{admin.user_id}/")
+
+    assert b"Admin" not in hidden_list.content
+    assert hidden_detail.status_code == 404
+
+    admin_client = Client()
+    admin_client.force_login(admin)
+    response = admin_client.post(
+        "/my-profile/",
+        {"display_name": "Admin", "bio": "Looking for a roommate."},
+    )
+
+    assert response.status_code == 302
+    profile.refresh_from_db()
+    assert profile.show_in_roommate_search
+    assert b"Admin" in client.get("/roommates/").content
+
+
 @pytest.mark.parametrize("search_name", ["alice johnson", "ALICE", "Ali"])
 def test_name_search_is_case_insensitive_and_matches_partial_names(
     client, location, search_name

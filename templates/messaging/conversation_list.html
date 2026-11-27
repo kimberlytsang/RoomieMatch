@@ -5,7 +5,10 @@
 {% block content %}
 <main class="page-wrap roommate-page conversations-page">
   <section class="empty-conversations" aria-labelledby="empty-conversations-title" data-conversations-url="{% url 'conversation-sidebar' %}">
-    <h1 id="empty-conversations-title">Your chats</h1>
+    <div class="empty-conversations-heading">
+      <h1 id="empty-conversations-title">Your chats</h1>
+      <a class="chat-remove-button" href="{% url 'hidden-conversations' %}">Hidden Chats</a>
+    </div>
     {% if user.is_admin %}
       <p>You have no chats yet. Open a support request to contact a user.</p>
       <a class="button-primary" href="{% url 'app-admin' %}">View support requests</a>

@@ -6,7 +6,10 @@
 <main class="page-wrap roommate-page conversation-detail-page">
   <section class="chat-layout" aria-label="Chats">
     <aside class="chat-sidebar">
-      <h1>Chats</h1>
+      <div class="chat-sidebar-heading">
+        <h1>Chats</h1>
+        <a class="chat-remove-button" href="{% url 'hidden-conversations' %}">Hidden Chats</a>
+      </div>
       <p class="chat-feature-hint">Pin a chat to keep it at the top. Right-click or long-press a message for options.</p>
       <nav
         class="chat-list"
@@ -82,8 +85,8 @@
   <dialog class="message-error-modal" id="message-error-modal" aria-labelledby="message-error-title">
     <div>
       <p class="eyebrow">Send a message</p>
-      <h2 id="message-error-title">Write a message first</h2>
-      <p>Type a message before you send it.</p>
+      <h2 id="message-error-title">Message not sent</h2>
+      <p>{{ message_error }}</p>
       <button class="button-primary" type="button" data-close-message-error>Keep writing</button>
     </div>
   </dialog>

@@ -6,6 +6,8 @@ from django.db.models import Max, Q
 
 from .models import Conversation, ConversationVisibility, Message
 
+MAX_MESSAGE_LENGTH = 2000
+
 
 def _ordered_pair(first_user, second_user):
     """Return users in the stable order required by Conversation's constraint."""
@@ -22,6 +24,10 @@ def send_message(sender, recipient, body):
     """Create a message and its one-to-one conversation when needed."""
     if not isinstance(body, str) or not body.strip():
         raise ValidationError({"body": "Enter a message."})
+    if len(body) > MAX_MESSAGE_LENGTH:
+        raise ValidationError({
+            "body": f"Message must be {MAX_MESSAGE_LENGTH} characters or fewer."
+        })
 
     user_a, user_b = _ordered_pair(sender, recipient)
     with transaction.atomic():
@@ -63,6 +69,27 @@ def visible_conversations(user):
     return sorted(conversations, key=lambda conversation: not conversation.is_pinned)
 
 
+def hidden_conversations(user):
+    """Return conversations hidden by this user that have not received a new message."""
+    hidden_cutoffs = dict(
+        ConversationVisibility.objects.filter(user=user, hidden_through_id__gt=0)
+        .values_list("conversation_id", "hidden_through_id")
+    )
+    conversations = list_conversations(user).filter(pk__in=hidden_cutoffs)
+    hidden = []
+    for conversation in conversations:
+        cutoff = hidden_cutoffs[conversation.pk]
+        if conversation.messages.filter(message_id__gt=cutoff).exists():
+            continue
+        conversation.other_user = other_participant(conversation, user)
+        conversation.other_name = participant_name(conversation.other_user)
+        conversation.last_message = conversation.messages.filter(
+            message_id__lte=cutoff
+        ).exclude(hidden_for=user).order_by("-message_id").first()
+        hidden.append(conversation)
+    return hidden
+
+
 def get_conversation_for_user(user, conversation_id):
     """Return a conversation only when the requester is a participant."""
     return (
@@ -75,6 +102,35 @@ def get_conversation_for_user(user, conversation_id):
         .prefetch_related("messages__sender")
         .get()
     )
+
+
+def users_have_conversation(user, other_user_id):
+    """Return whether two users have a conversation."""
+    return Conversation.objects.filter(
+        Q(user_a=user, user_b_id=other_user_id)
+        | Q(user_b=user, user_a_id=other_user_id)
+    ).exists()
+
+
+def unhide_conversation(user, conversation_id):
+    """Restore a conversation hidden by this user, including its message history."""
+    with transaction.atomic():
+        try:
+            conversation = get_conversation_for_user(user, conversation_id)
+            visibility = ConversationVisibility.objects.select_for_update().get(
+                conversation=conversation, user=user, hidden_through_id__gt=0
+            )
+        except (Conversation.DoesNotExist, ConversationVisibility.DoesNotExist):
+            raise Conversation.DoesNotExist
+
+        if conversation.messages.filter(
+            message_id__gt=visibility.hidden_through_id
+        ).exists():
+            raise Conversation.DoesNotExist
+
+        visibility.hidden_through_id = 0
+        visibility.save(update_fields=["hidden_through_id"])
+        return conversation
 
 
 def other_participant(conversation, user):

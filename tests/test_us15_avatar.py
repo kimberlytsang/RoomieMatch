@@ -287,6 +287,25 @@ def test_photo_visibility_matches_roommate_visibility(signed_in, user, profile, 
     assert signed_in.get(url).content == image_bytes("JPEG")
 
 
+def test_hidden_admin_photo_is_available_to_conversation_participant(signed_in, user):
+    admin = User.objects.create_admin("admin-avatar@example.com", "Correct-Horse-42")
+    Profile.objects.create(
+        user=admin,
+        display_name="Admin",
+        profile_picture=image_bytes("JPEG", "navy"),
+        show_in_roommate_search=False,
+    )
+    url = reverse("profile-photo", args=[admin.pk])
+
+    assert signed_in.get(url).status_code == 404
+
+    messaging_services.send_message(user, admin, "Hello")
+
+    response = signed_in.get(url)
+    assert response.status_code == 200
+    assert response.content == image_bytes("JPEG", "navy")
+
+
 def test_missing_profile_photo_returns_404(signed_in):
     response = signed_in.get(reverse("profile-photo", args=[uuid4()]))
     assert response.status_code == 404

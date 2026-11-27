@@ -7,6 +7,12 @@ from . import page_views
 urlpatterns = [
     path("roommates/<uuid:user_id>/message/", page_views.send_message_page, name="send-message"),
     path("conversations/", page_views.conversation_list, name="conversation-list"),
+    path("conversations/hidden/", page_views.hidden_conversation_list, name="hidden-conversations"),
+    path(
+        "conversations/<uuid:conversation_id>/unhide/",
+        page_views.unhide_conversation,
+        name="conversation-unhide",
+    ),
     path(
         "app-admin/support-requests/<int:request_id>/message/",
         page_views.support_request_message,

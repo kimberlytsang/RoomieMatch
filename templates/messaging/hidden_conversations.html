@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Hidden Conversations - RoomieMatch{% endblock %}
+
+{% block content %}
+<main class="page-wrap roommate-page conversation-detail-page">
+  <section class="chat-layout" aria-label="Hidden conversations">
+    <aside class="chat-sidebar">
+      <div class="chat-sidebar-heading">
+        <h1>Hidden Chats</h1>
+        <a class="chat-remove-button" href="{% url 'conversation-list' %}">Chats</a>
+      </div>
+      {% if conversations %}
+        <nav class="chat-list" aria-label="Your hidden chats">
+          {% for item in conversations %}
+            <div class="chat-list-item hidden-chat-list-item">
+              {% if item.other_user.profile.profile_picture %}
+                <img class="conversation-avatar conversation-avatar-image" src="{% url 'profile-photo' item.other_user.user_id %}" alt="">
+              {% else %}
+                <span class="conversation-avatar" aria-hidden="true">{{ item.other_name|first|upper }}</span>
+              {% endif %}
+              <span class="chat-list-copy">
+                <strong>{{ item.other_name }}</strong>
+                <small>{{ item.last_message.body|default:"No messages to show"|truncatechars:42 }}</small>
+                <form method="post" action="{% url 'conversation-unhide' item.conversation_id %}" data-unhide-form>
+                  {% csrf_token %}
+                  <button class="chat-remove-button" type="button" data-confirm-unhide>Unhide conversation</button>
+                </form>
+              </span>
+            </div>
+          {% endfor %}
+        </nav>
+      {% else %}
+        <p class="chat-feature-hint">You have no hidden chats.</p>
+      {% endif %}
+    </aside>
+    <section class="chat-main hidden-conversations-main">
+      <p class="chat-feature-hint">Conversations you hide are only hidden from you.</p>
+    </section>
+  </section>
+</main>
+
+<dialog class="message-error-modal" id="unhide-confirmation" aria-labelledby="unhide-confirmation-title">
+  <div>
+    <p id="unhide-confirmation-title">Are you sure you want to unhide this conversation?</p>
+    <div class="unhide-confirmation-actions">
+      <button class="button-primary" type="button" data-confirm-unhide-yes>Yes</button>
+      <button class="my-profile-secondary" type="button" data-confirm-unhide-no>No</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const unhideDialog = document.getElementById("unhide-confirmation");
+  let selectedUnhideForm = null;
+
+  document.querySelectorAll("[data-confirm-unhide]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedUnhideForm = button.closest("[data-unhide-form]");
+      unhideDialog.showModal();
+    });
+  });
+
+  document.querySelector("[data-confirm-unhide-yes]").addEventListener("click", () => {
+    if (selectedUnhideForm) selectedUnhideForm.requestSubmit();
+  });
+
+  document.querySelector("[data-confirm-unhide-no]").addEventListener("click", () => {
+    selectedUnhideForm = null;
+    unhideDialog.close();
+  });
+</script>
+{% endblock %}

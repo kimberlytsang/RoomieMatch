@@ -5,6 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods
 
 from config.api import BadRequest, authenticated_only, error, json_body
+from messaging import services as messaging_services
 
 from . import services
 from .models import Preference, Profile
@@ -97,12 +98,17 @@ def profile_me(request):
 @require_GET
 @authenticated_only
 def profile_photo(request, user_id):
-    """Read your own photo or a browseable roommate's photo (also for US-08)."""
+    """Read your own photo, a browseable roommate's, or a conversation participant's."""
     try:
         if user_id == request.user.pk:
             profile = services.get_profile(request.user)
         else:
-            profile = services.get_available_roommate(request.user, user_id)
+            try:
+                profile = services.get_available_roommate(request.user, user_id)
+            except Profile.DoesNotExist:
+                if not messaging_services.users_have_conversation(request.user, user_id):
+                    raise
+                profile = Profile.objects.get(user_id=user_id)
     except Profile.DoesNotExist:
         return error(404, "Profile photo not found.")
     if not profile.profile_picture:
